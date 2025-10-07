@@ -2220,7 +2220,12 @@ class MadrigalWeb:
             if endDate < sDT:
                 continue
             if dateList:
-                if (sDT.date() not in dateList) or (eDT.date() not in dateList):
+                foundDate = False
+                for thisDate in dateList:
+                    if (sDT.date() == thisDate) or (eDT.date() == thisDate):
+                        foundDate = True
+                        break
+                if not foundDate:
                     continue
 
             # instrument filter
