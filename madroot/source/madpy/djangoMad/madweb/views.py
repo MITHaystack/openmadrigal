@@ -2568,7 +2568,8 @@ def get_madfile_service(request):
                 cachedTxtFile = os.path.join(dirname, 'overview', os.path.basename(fileName) + '.txt.gz')
                 tmpFile = os.path.join(tmpdirname, basename + '.txt.gz')
                 if os.access(cachedTxtFile, os.R_OK):
-                    shutil.copy(cachedTxtFile, tmpFile)
+                    # don't copy to /tmp anymore-- cached file has what we need
+                    tmpFile = cachedTxtFile
                 else:
                     tmpFile = os.path.join(tmpdirname, basename + '.txt')
                     madrigal.cedar.convertToText(fileName, tmpFile)
@@ -2576,7 +2577,8 @@ def get_madfile_service(request):
                 cachedNCFile = os.path.join(dirname, 'overview', os.path.basename(fileName) + '.nc')
                 tmpFile = os.path.join(tmpdirname, basename + '.nc')
                 if os.access(cachedNCFile, os.R_OK):
-                    shutil.copy(cachedNCFile, tmpFile)
+                    # don't copy to /tmp anymore-- cached file has what we need
+                    tmpFile = cachedNCFile
                 else:
                     try:
                         madrigal.cedar.convertToNetCDF4(fileName, tmpFile)
