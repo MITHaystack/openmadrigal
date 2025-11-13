@@ -255,6 +255,7 @@
 8321,cvd,Cape Verde SCINDA Scintillation Receiver,16.73,337.07,68.94,Keith Groves,,,,Cape Verde,,,Cape Verde,(617) 552-8767,keith.groves@bc.edu,20
 8322,dkr,Dakar SCINDA Scintillation Receiver,14.69,342.54,0.0,Keith Groves,,,,Dakar,,,Senegal,(617) 552-8767,keith.groves@bc.edu,20
 8323,drw,Darwin SCINDA Scintillation Receiver,-12.536,131.063,0.044,Keith Groves,,,,Darwin,,,Australia,(617) 552-8767,keith.groves@bc.edu,20
+8324,hay,Haystack SCINDA Scintillation Receiver,42.61,288.52,0.106,Keith Groves,MIT/Haystack Observatory,Route 40,,Westford,MA,01886,USA,(617) 552-8767,keith.groves@bc.edu,20
 8400,jsn,Jason/Topex Ocean TEC,0.0,0.0,0.0,Anthea Coster,MIT/Haystack Observatory,Off Route 40,,Westford,MA,01886,USA,781-981-5753,acoster@haystack.mit.edu,9
 8500,spr,South Pole Station Riometer,-90,0,2.835,Allan Weatherwax,MIT/Haystack Observatory,Route 40,,Westford,MA,01886,USA,617-715-5584,wxwax@mit.edu,21
 8501,mmr,McMurdo Riometer,-77.9,166.7,0.01,Allan Weatherwax,MIT/Haystack Observatory,Route 40,,Westford,MA,01886,USA,617-715-5584,wxwax@mit.edu,21
