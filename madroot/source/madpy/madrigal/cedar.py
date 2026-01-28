@@ -501,10 +501,10 @@ class MadrigalCedarFile:
             stopDT = datetime.datetime.fromtimestamp(firstRow['ut2_unix'], datetime.UTC)
             
             if firstRow['kinst'] not in self._kinstList:
-                self._kinstList.append(firstRow['kinst'])
+                self._kinstList.append(int(firstRow['kinst']))
                 
             if firstRow['kindat'] not in self._kindatList:
-                self._kindatList.append(firstRow['kindat'])
+                self._kindatList.append(int(firstRow['kindat']))
             
             # find earliest and latest times
             if self._earliestDT is None:
@@ -537,7 +537,6 @@ class MadrigalCedarFile:
             else:
                 indParms = self._ind2DList
                 
-                    
             newMadDataRec = MadrigalDataRecord(madInstObj=self._madInstObj, madParmObj=self._madParmObj,
                                                dataset=tableSlice, recordSet=self._recDset, 
                                                parmObjList=parmObjList, ind2DList=indParms)
@@ -3966,7 +3965,7 @@ class MadrigalDataRecord:
 
         Outputs: the kind of data code (int) for a given data record.
         """
-        return(self._dataset['kindat'][0])
+        return(int(self._dataset['kindat'][0]))
 
 
     def setKindat(self, newKindat):
@@ -4497,7 +4496,13 @@ class MadrigalDataRecord:
     def __str__(self):
         """ returns a string representation of a MadrigalDataRecord """
         retStr = 'Data record:\n'
-        retStr += 'kinst = %i (%s)\n' % (self.getKinst(), self._instrumentName)
+        try:
+            retStr += 'kinst = %i (%s)\n' % (self.getKinst(), self._instrumentName)
+        except AttributeError:
+            # set instrumentName from dataset kinst
+            kinst = self.getKinst()
+            self.setKinst(kinst)
+            retStr += 'kinst = %i (%s)\n' % (self.getKinst(), self._instrumentName)
         retStr += 'kindat = %i\n' % (self.getKindat())
         startTimeList = self.getStartTimeList()
         endTimeList = self.getEndTimeList()

@@ -13,7 +13,6 @@ $Id: userData.py 7242 2020-10-05 17:59:38Z brideout $
 # standard python imports
 import os
 import string
-import crypt
 import time
 import stat
 import traceback
@@ -23,6 +22,9 @@ import xml.sax.handler
 
 # Madrigal imports
 import madrigal.metadata
+
+# third party imports
+import purecrypt as crypt
 
 
 class MadrigalUserData:

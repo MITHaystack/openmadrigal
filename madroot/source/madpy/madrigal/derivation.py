@@ -1427,7 +1427,11 @@ class MadrigalDerivation:
 
             inParms, outParms, inIndices, outIndices = madDerPlan.tempArrayMapDict[methodName]
             for i, inParm in enumerate(inParms):
-                inputArr[i] = madDerPlan.tempArray[inParm]
+                try:
+                    inputArr[i] = madDerPlan.tempArray[inParm] 
+                except:
+                    # should be exactly 1 item (scalar)
+                    inputArr[i] = madDerPlan.tempArray[inParm][0]
 
             # check for Nan in inputs
             if numpy.any(numpy.isnan(inputArr[:len(inIndices)])):
@@ -1507,7 +1511,11 @@ class MadrigalDerivation:
                     isC = False
                 inParms, outParms, inIndices, outIndices = madDerPlan.tempArrayMapDict[methodName]
                 for i, inParm in enumerate(inParms):
-                    inputArr[i] = float(madDerPlan.tempArray[inParm])
+                    try:
+                        inputArr[i] = float(madDerPlan.tempArray[inParm])
+                    except:
+                        # should be exactly 1 item (scalar)
+                        inputArr[i] = float(madDerPlan.tempArray[inParm][0])
                 
                 # check for Nan in inputs
                 if numpy.any(numpy.isnan(inputArr[:len(inIndices)])):
@@ -1548,7 +1556,13 @@ class MadrigalDerivation:
                 
             for parm in madDerPlan.requested2D:
                 if not self._madParmObj.isString(parm):
-                    new_dataset[parm][-1] = madDerPlan.tempArray[parm]
+                    try:
+                        new_dataset[parm][-1] = madDerPlan.tempArray[parm]
+                    except:
+                        # treat this value like a scalar, not array
+                        # double check that it is a single value
+                        if (madDerPlan.tempArray[parm].ndim == 1) and (len(madDerPlan.tempArray[parm]) == 1):
+                            new_dataset[parm][-1] = madDerPlan.tempArray[parm][0]
                 else:
                     new_dataset[parm][-1] = madDerPlan.tempArray[parm][-1]
             
@@ -1677,6 +1691,9 @@ class MadrigalFilter:
         """
         
         # first step is to see if we can return False immediately based on invalid values
+        if type(mnem1Value) not in (math.nan, numpy.nan, float, int):
+            # mmem1value is array type 
+            mnem1Value = mnem1Value[0]
         if math.isnan(mnem1Value):
             return(False)
         if self.mnem1IsError and mnem1Value < 0.0:

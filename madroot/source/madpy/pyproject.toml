@@ -25,7 +25,8 @@ dependencies = [
     "django-bootstrap3",
     "aacgmv2",
     "packaging",
-    "madrigalweb"
+    "madrigalweb",
+    "py-purecrypt"
     ]
 
 [project.urls]
