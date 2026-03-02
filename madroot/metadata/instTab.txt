@@ -276,6 +276,7 @@
 8342,mnl,Manila SCINDA Scintillation Receiver,14.64,121.08,0.058,Keith Groves,,,,Manila,,,Philippines,(617) 552-8767,keith.groves@bc.edu,20
 8343,nbo,Nairobi West SCINDA Scintillation Receiver,-1.27,36.81,1.707,Keith Groves,,,,Nairobi,,,Kenya,(617) 552-8767,keith.groves@bc.edu,20
 8344,nca,North Carolina SCINDA Scintillation Receiver,36.08,280.23,0.256,Keith Groves,,,,,NC,,USA,(617) 552-8767,keith.groves@bc.edu,20
+8345,nr2,Nairobi East SCINDA Scintillation Receiver,-1.09,37.01,1.532,Keith Groves,,,,Nairobi,,,Kenya,(617) 552-8767,keith.groves@bc.edu,20
 8400,jsn,Jason/Topex Ocean TEC,0.0,0.0,0.0,Anthea Coster,MIT/Haystack Observatory,Off Route 40,,Westford,MA,01886,USA,781-981-5753,acoster@haystack.mit.edu,9
 8500,spr,South Pole Station Riometer,-90,0,2.835,Allan Weatherwax,MIT/Haystack Observatory,Route 40,,Westford,MA,01886,USA,617-715-5584,wxwax@mit.edu,21
 8501,mmr,McMurdo Riometer,-77.9,166.7,0.01,Allan Weatherwax,MIT/Haystack Observatory,Route 40,,Westford,MA,01886,USA,617-715-5584,wxwax@mit.edu,21
