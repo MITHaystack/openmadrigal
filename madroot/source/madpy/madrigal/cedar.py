@@ -433,129 +433,127 @@ class MadrigalCedarFile:
             
         isComplete = False
             
-        hdfFile = h5py.File(self._fullFilename, 'r')
-        tableDset = hdfFile["Data"]["Table Layout"]
-        metadataGroup = hdfFile["Metadata"]
-        recDset = metadataGroup["_record_layout"]
-        
-        if self._nextRecord == 0:
-            if self._recDset is None:
-                self._recDset = recDset[()]
-            elif self._recDset != recDset:
-                raise IOError('recDset in first record <%s> does not match expected recDset <%s>' % \
-                    (str(recDset), str(self._recDset)))
-            self._verifyFormat(tableDset, recDset)
-            self._tableDType = tableDset.dtype
-            self._experimentParameters = numpy.array(hdfFile["Metadata"]['Experiment Parameters'])
-            self._kinstList = self._getKinstList(self._experimentParameters)
-            self._kindatList = self._getKindatList(self._experimentParameters)
-            if self._arraySplitParms is None:
-                self._arraySplitParms = self._getArraySplitParms(hdfFile["Metadata"])
-            if 'Experiment Notes' in list(hdfFile["Metadata"].keys()):
-                self._appendCatalogRecs(hdfFile["Metadata"]['Experiment Notes'])
-                self._appendHeaderRecs(hdfFile["Metadata"]['Experiment Notes'])
+        with h5py.File(self._fullFilename, 'r') as hdfFile:
+            tableDset = hdfFile["Data"]["Table Layout"]
+            metadataGroup = hdfFile["Metadata"]
+            recDset = metadataGroup["_record_layout"]
             
-            
-        if self._ind2DList is not None:
-            parmObjList = (self._oneDList, self._twoDList, self._ind2DList) # used for performance in load
-        else:
-            parmObjList = None
-            
-        # get indices for each record
-        recLoaded = 0
-        recTested = 0
-        if not hasattr(self, 'recnoArr'):
-            self.recnoArr = tableDset['recno']
-        # read all the records in at once for performance
-        if not numRecords is None:
-            indices = numpy.searchsorted(self.recnoArr, numpy.array([self._nextRecord, self._nextRecord + numRecords]))
-            tableIndices = numpy.arange(indices[0], indices[1])
-            if len(tableIndices) > 0:
-                fullTableSlice = tableDset[tableIndices[0]:tableIndices[-1]+1]
-                fullRecnoArr = fullTableSlice['recno']
-        else:
-            fullTableSlice = tableDset
-            fullRecnoArr = self.recnoArr
-            
-        while(True):
+            if self._nextRecord == 0:
+                if self._recDset is None:
+                    self._recDset = recDset[()]
+                elif self._recDset != recDset:
+                    raise IOError('recDset in first record <%s> does not match expected recDset <%s>' % \
+                        (str(recDset), str(self._recDset)))
+                self._verifyFormat(tableDset, recDset)
+                self._tableDType = tableDset.dtype
+                self._experimentParameters = numpy.array(hdfFile["Metadata"]['Experiment Parameters'])
+                self._kinstList = self._getKinstList(self._experimentParameters)
+                self._kindatList = self._getKindatList(self._experimentParameters)
+                if self._arraySplitParms is None:
+                    self._arraySplitParms = self._getArraySplitParms(hdfFile["Metadata"])
+                if 'Experiment Notes' in list(hdfFile["Metadata"].keys()):
+                    self._appendCatalogRecs(hdfFile["Metadata"]['Experiment Notes'])
+                    self._appendHeaderRecs(hdfFile["Metadata"]['Experiment Notes'])
+                
+                
+            if self._ind2DList is not None:
+                parmObjList = (self._oneDList, self._twoDList, self._ind2DList) # used for performance in load
+            else:
+                parmObjList = None
+                
+            # get indices for each record
+            recLoaded = 0
+            recTested = 0
+            if not hasattr(self, 'recnoArr'):
+                self.recnoArr = tableDset['recno']
+            # read all the records in at once for performance
             if not numRecords is None:
+                indices = numpy.searchsorted(self.recnoArr, numpy.array([self._nextRecord, self._nextRecord + numRecords]))
+                tableIndices = numpy.arange(indices[0], indices[1])
+                if len(tableIndices) > 0:
+                    fullTableSlice = tableDset[tableIndices[0]:tableIndices[-1]+1]
+                    fullRecnoArr = fullTableSlice['recno']
+            else:
+                fullTableSlice = tableDset
+                fullRecnoArr = self.recnoArr
+                
+            while(True):
+                if not numRecords is None:
+                    if len(tableIndices) == 0:
+                        isComplete = True
+                        break
+                if numRecords:
+                    if recTested >= numRecords:
+                        break
+                    
+                # get slices of tableDset and recDset to create next MadrigalDataRecord
+                indices = numpy.searchsorted(fullRecnoArr, numpy.array([self._nextRecord, self._nextRecord + 1]))
+                tableIndices = numpy.arange(indices[0], indices[1])
                 if len(tableIndices) == 0:
                     isComplete = True
                     break
-            if numRecords:
-                if recTested >= numRecords:
-                    break
+                tableSlice = fullTableSlice[tableIndices[0]:tableIndices[-1]+1]
+                self._recIndexList.append((tableIndices[0],tableIndices[-1]+1))
+                self._nextRecord += 1
                 
-            # get slices of tableDset and recDset to create next MadrigalDataRecord
-            indices = numpy.searchsorted(fullRecnoArr, numpy.array([self._nextRecord, self._nextRecord + 1]))
-            tableIndices = numpy.arange(indices[0], indices[1])
-            if len(tableIndices) == 0:
-                isComplete = True
-                break
-            tableSlice = fullTableSlice[tableIndices[0]:tableIndices[-1]+1]
-            self._recIndexList.append((tableIndices[0],tableIndices[-1]+1))
-            self._nextRecord += 1
-            
-            firstRow = tableSlice[0]
-            startDT = datetime.datetime.fromtimestamp(firstRow['ut1_unix'], datetime.UTC)
-            stopDT = datetime.datetime.fromtimestamp(firstRow['ut2_unix'], datetime.UTC)
-            
-            if firstRow['kinst'] not in self._kinstList:
-                self._kinstList.append(int(firstRow['kinst']))
+                firstRow = tableSlice[0]
+                startDT = datetime.datetime.fromtimestamp(firstRow['ut1_unix'], datetime.UTC)
+                stopDT = datetime.datetime.fromtimestamp(firstRow['ut2_unix'], datetime.UTC)
                 
-            if firstRow['kindat'] not in self._kindatList:
-                self._kindatList.append(int(firstRow['kindat']))
-            
-            # find earliest and latest times
-            if self._earliestDT is None:
-                self._earliestDT = startDT
-                self._latestDT = stopDT
-            else:
-                if startDT < self._earliestDT:
+                if firstRow['kinst'] not in self._kinstList:
+                    self._kinstList.append(int(firstRow['kinst']))
+                    
+                if firstRow['kindat'] not in self._kindatList:
+                    self._kindatList.append(int(firstRow['kindat']))
+                
+                # find earliest and latest times
+                if self._earliestDT is None:
                     self._earliestDT = startDT
-                if stopDT > self._latestDT:
                     self._latestDT = stopDT
-                    
-            recTested += 1 # increment here because the next step may reject it
-            
-            # check if datetime filter should be applied
-            if not self._startDatetime is None or not self._endDatetime is None:
-                if not self._startDatetime is None:
-                    if stopDT < self._startDatetime:
-                        continue
-                if not self._endDatetime is None:
-                    if startDT > self._endDatetime:
-                        isComplete = True
-                        break
-                    
-            if self._ind2DList is None:
-                try:
-                    indParmList = metadataGroup['Independent Spatial Parameters']['mnemonic']
-                    indParms = [item.decode('utf-8') for item in indParmList]
-                except:
-                    indParms = []
-            else:
-                indParms = self._ind2DList
+                else:
+                    if startDT < self._earliestDT:
+                        self._earliestDT = startDT
+                    if stopDT > self._latestDT:
+                        self._latestDT = stopDT
+                        
+                recTested += 1 # increment here because the next step may reject it
                 
-            newMadDataRec = MadrigalDataRecord(madInstObj=self._madInstObj, madParmObj=self._madParmObj,
-                                               dataset=tableSlice, recordSet=self._recDset, 
-                                               parmObjList=parmObjList, ind2DList=indParms)
-            
+                # check if datetime filter should be applied
+                if not self._startDatetime is None or not self._endDatetime is None:
+                    if not self._startDatetime is None:
+                        if stopDT < self._startDatetime:
+                            continue
+                    if not self._endDatetime is None:
+                        if startDT > self._endDatetime:
+                            isComplete = True
+                            break
+                        
+                if self._ind2DList is None:
+                    try:
+                        indParmList = metadataGroup['Independent Spatial Parameters']['mnemonic']
+                        indParms = [item.decode('utf-8') for item in indParmList]
+                    except:
+                        indParms = []
+                else:
+                    indParms = self._ind2DList
+                    
+                newMadDataRec = MadrigalDataRecord(madInstObj=self._madInstObj, madParmObj=self._madParmObj,
+                                                dataset=tableSlice, recordSet=self._recDset, 
+                                                parmObjList=parmObjList, ind2DList=indParms)
+                
 
-            if self._ind2DList is None:
-                self._oneDList = newMadDataRec.get1DParms()
-                self._twoDList = newMadDataRec.get2DParms()
-                self._ind2DList = newMadDataRec.getInd2DParms()
-                parmObjList = (self._oneDList, self._twoDList, self._ind2DList) # used for performance in load
-                # set self._num2DSplit
-                twoDSet = set([o.mnemonic for o in self._twoDList])
-                arraySplitSet = set(self._arraySplitParms)
-                self._num2DSplit = len(twoDSet.intersection(arraySplitSet))
-                
-            self._privList.append(newMadDataRec)
-            recLoaded += 1
-            
-        hdfFile.close()
+                if self._ind2DList is None:
+                    self._oneDList = newMadDataRec.get1DParms()
+                    self._twoDList = newMadDataRec.get2DParms()
+                    self._ind2DList = newMadDataRec.getInd2DParms()
+                    parmObjList = (self._oneDList, self._twoDList, self._ind2DList) # used for performance in load
+                    # set self._num2DSplit
+                    twoDSet = set([o.mnemonic for o in self._twoDList])
+                    arraySplitSet = set(self._arraySplitParms)
+                    self._num2DSplit = len(twoDSet.intersection(arraySplitSet))
+                    
+                self._privList.append(newMadDataRec)
+                recLoaded += 1
         
         # update minmax
         if self._totalDataRecords > 0:
@@ -630,17 +628,13 @@ class MadrigalCedarFile:
                 raise IOError('filename must end with %s, <%s> does not' % (str(self._hdf5Extensions), newFilename))
             try:
                 # we need to make sure this file is closed and then deleted if an error
-                f = None # used if next line fails
-                f = h5py.File(newFilename, 'w')
-                self._writeHdf5Metadata(f, refreshCatHeadTimes)
-                self._writeHdf5Data(f)
-                if len(self.getIndSpatialParms()) > 0:
-                    self._createArrayLayout(f, arraySplittingParms)
-                f.close()
+                with h5py.File(newFilename, 'w') as f:
+                    self._writeHdf5Metadata(f, refreshCatHeadTimes)
+                    self._writeHdf5Data(f)
+                    if len(self.getIndSpatialParms()) > 0:
+                        self._createArrayLayout(f, arraySplittingParms)
             except:
                 # on any error, close and delete file, then reraise error
-                if f:
-                    f.close()
                 if os.access(newFilename, os.R_OK):
                     os.remove(newFilename)
                 raise
@@ -649,21 +643,17 @@ class MadrigalCedarFile:
             try:
                 # we need to make sure this file is closed and then deleted if an error
                 f = None # used if next line fails
-                f = netCDF4.Dataset(newFilename, 'w', format='NETCDF4')
-                self._writeNetCDF4(f, arraySplittingParms)
-                f.close()
+                with netCDF4.Dataset(newFilename, 'w', format='NETCDF4') as f:
+                    self._writeNetCDF4(f, arraySplittingParms)
+                #f.close()
             except ValueError:  # try using recno instead of ut1_unix as key
                 self._useRecno = True
                 try:
                     # we need to make sure this file is closed and then deleted if an error
-                    try:
-                        f.close()
-                    except:
-                        pass
                     f = None # used if next line fails
-                    f = netCDF4.Dataset(newFilename, 'w', format='NETCDF4')
-                    self._writeNetCDF4(f, arraySplittingParms)
-                    f.close()
+                    with netCDF4.Dataset(newFilename, 'w', format='NETCDF4') as f:
+                        self._writeNetCDF4(f, arraySplittingParms)
+                    #f.close()
                 except:
                     # on any error, close and delete file, then reraise error
                     if f:
@@ -737,17 +727,13 @@ class MadrigalCedarFile:
         
             try:
                 # we need to make sure this file is closed and then deleted if an error
-                f = None # used if next line fails
-                f = h5py.File(newFilename, 'a')
-                self._closed = False
-                if self.hasArray(f):
-                    raise IOError('Cannot call dump for hdf5 after write or close')
-                self._writeHdf5Data(f)
-                f.close()
+                with h5py.File(newFilename, 'a') as f:
+                    self._closed = False
+                    if self.hasArray(f):
+                        raise IOError('Cannot call dump for hdf5 after write or close')
+                    self._writeHdf5Data(f)
             except:
                 # on any error, close and delete file, then reraise error
-                if f:
-                    f.close()
                 if os.access(newFilename, os.R_OK):
                     os.remove(newFilename)
                 raise
@@ -758,23 +744,22 @@ class MadrigalCedarFile:
             if self._format is None:
                 # first write
                 try:
-                    f = netCDF4.Dataset(newFilename, 'w', format='NETCDF4')
-                    self._firstDumpNetCDF4(f, parmIndexDict)
-                    f.close()
+                    with netCDF4.Dataset(newFilename, 'w', format='NETCDF4') as f:
+                        self._firstDumpNetCDF4(f, parmIndexDict)
+                    #f.close()
                 except:
                     # try replacing ut1_unix with recno
                     self._useRecno = True
                     try:
-                        f,close()
+                        f.close()
                     except:
                         pass
-                    f = netCDF4.Dataset(newFilename, 'w', format='NETCDF4')
-                    self._firstDumpNetCDF4(f, parmIndexDict)
-                    f.close()
+                    with netCDF4.Dataset(newFilename, 'w', format='NETCDF4') as f:
+                        self._firstDumpNetCDF4(f, parmIndexDict)
+                    #f.close()
             else:
-                f = netCDF4.Dataset(newFilename, 'a', format='NETCDF4')
-                self._appendNetCDF4(f, parmIndexDict)
-                f.close()
+                with netCDF4.Dataset(newFilename, 'a', format='NETCDF4') as f:
+                    self._appendNetCDF4(f, parmIndexDict)
             
                 
 
@@ -1837,267 +1822,267 @@ class MadrigalCedarFile:
         IOError raised if Array Layout already exists - this can only be called once
         """
         
-        f = h5py.File(self._fullFilename, 'a')
-        # get info from recarrays that already exist
-        table = f['Data']['Table Layout']
-        recLayout = f['Metadata']['_record_layout']
-        metadataGroup = f['Metadata']
-        
-        # inputs
-        indParmList = self.getIndSpatialParms()
-        
-        if "Array Layout" in list(f['Data'].keys()):
-            raise IOError('Array Layout already created - this can only be created once.')
-        
-        # update metadata now that file finished
-        self._writeHdf5Metadata(f, refreshCatHeadTimes=True)
-        
-        if self._skipArray:
-            f.close()
-            return
-        
-        # now that self._arrDict is competely filled out, create a similar dict, except that
-        # all sets are replaced by ordered python arrays
-        total_allowed_records = 0 # make sure all ind parameters declared by checking that the product
-                                  # of all the ind parm value lengths time the number of times is equal
-                                  # to or greater than the number of total records
-        arrDict = {}
-        for key in list(self._arrDict.keys()):
-            total_ind_parm_lens = []
-            thisDict = self._arrDict[key]
-            arrDict[key] = {}
-            for key2 in list(thisDict.keys()):
-                thisSet = thisDict[key2]
-                # convert to ordered numpy array
-                thisList = list(thisSet)
-                thisList.sort()
-                total_ind_parm_lens.append(len(thisList))
-                if self._madParmObj.isInteger(key2):
-                    data = numpy.array(thisList, dtype=numpy.int64)
-                elif self._madParmObj.isString(key2):
-                    strLen = self._madParmObj.getStringLen(key2)
-                    data = numpy.array(thisList, dtype=numpy.dtype('S%i' % (strLen)))
-                else:
-                    data = numpy.array(thisList, dtype=numpy.float64)
-                arrDict[key][key2] = data
-                
-            # add the max number of records for this group
-            tmp = total_ind_parm_lens[0]
-            for v in total_ind_parm_lens[1:]:
-                tmp *= v
-            total_allowed_records += tmp
+        with h5py.File(self._fullFilename, 'a') as f:
+            # get info from recarrays that already exist
+            table = f['Data']['Table Layout']
+            recLayout = f['Metadata']['_record_layout']
+            metadataGroup = f['Metadata']
             
-            # protect against too many ind parm combinations (too sparse an array)
-            total_ind_combos = total_ind_parm_lens[1]
-            for v in total_ind_parm_lens[2:]:
-                total_ind_combos *= v
-            if total_ind_combos > 1000000:
-                print(('Skipping array creation since %i independent parm combinations would create too big an array' % (total_ind_combos)))
-                f.close()
+            # inputs
+            indParmList = self.getIndSpatialParms()
+            
+            if "Array Layout" in list(f['Data'].keys()):
+                raise IOError('Array Layout already created - this can only be created once.')
+            
+            # update metadata now that file finished
+            self._writeHdf5Metadata(f, refreshCatHeadTimes=True)
+            
+            if self._skipArray:
+                #f.close()
                 return
             
-        if len(table) > total_allowed_records:
-            raise ValueError('Found %i lines in table, but values of times and ind parms %s allow maximum of %i values in file %s' % \
-                (len(table), str(indParmList), total_allowed_records, self._fullFilename))
-        
-        # add "Parameters Used to Split Array Data" to Metadata
-        if not self._arraySplitParms == []:
-            arrSplitParmDesc = []
-            longestMnemStr = 0
-            longestDescStr = 0
-            for arrSplitParm in self._arraySplitParms:
-                if len(arrSplitParm) > longestMnemStr:
-                    longestMnemStr = len(arrSplitParm)
-                arrSplitParmDesc.append(self._madParmObj.getSimpleParmDescription(arrSplitParm))
-                if len(arrSplitParmDesc[-1]) > longestDescStr:
-                    longestDescStr = len(arrSplitParmDesc[-1])
-            arrSplitArr = numpy.recarray((len(self._arraySplitParms),),
-                                         dtype = [('mnemonic', '|S%i' % (longestMnemStr)),
-                                                  ('description', '|S%i' % (longestDescStr))])
-            for i, arrSplitParm in enumerate(self._arraySplitParms):
-                arrSplitArr[i]['mnemonic'] = arrSplitParm
-                arrSplitArr[i]['description'] = arrSplitParmDesc[i]
-            
-            metadataGroup.create_dataset('Parameters Used to Split Array Data', data=arrSplitArr)
-            
-
-        arrGroup = f['Data'].create_group("Array Layout")
-        
-        # stage 1 - write all needed tables with nan values
-        for key in list(arrDict.keys()):
-            if key != '':
-                groupName = self._getGroupName(key)
-                thisGroup = arrGroup.create_group(groupName)
-            else:
-                thisGroup = arrGroup # no subgroups needed
-                
-            self._addLayoutDescription(thisGroup)
-                
-            """thisDict is dict of key = 'ut1_unix' and ind 2d parm names (possibly minus arraySplitParms), values
-                = ordered numpy array of all unique values"""
-            thisDict = arrDict[key] 
-                                      
-            unique_times = thisDict['ut1_unix']
-            
-            ts_dset = thisGroup.create_dataset("timestamps", data=unique_times)
-            for indParm in indParmList:
-                if indParm in self._arraySplitParms:
-                    # not needed
-                    continue
-                dataset = thisDict[indParm]
-                thisGroup.create_dataset(indParm, data=dataset)
-                
-            # one D parm arrays
-            oneDGroup = thisGroup.create_group('1D Parameters')
-            self._addDataParametersTable(oneDGroup, 1)
-            for parm in recLayout.dtype.names[len(self.requiredFields):]:
-                if recLayout[parm][0] == 1:
-                    if self._madParmObj.isInteger(parm):
-                        dset = numpy.zeros((len(unique_times),), dtype=numpy.int64)
-                        dset[:] = numpy.iinfo(numpy.int64).min
-                    elif self._madParmObj.isString(parm):
-                        strLen = self._madParmObj.getStringLen(parm)
-                        dset = numpy.zeros((len(unique_times),), dtype=numpy.dtype(("S" + str(strLen))))
+            # now that self._arrDict is competely filled out, create a similar dict, except that
+            # all sets are replaced by ordered python arrays
+            total_allowed_records = 0 # make sure all ind parameters declared by checking that the product
+                                    # of all the ind parm value lengths time the number of times is equal
+                                    # to or greater than the number of total records
+            arrDict = {}
+            for key in list(self._arrDict.keys()):
+                total_ind_parm_lens = []
+                thisDict = self._arrDict[key]
+                arrDict[key] = {}
+                for key2 in list(thisDict.keys()):
+                    thisSet = thisDict[key2]
+                    # convert to ordered numpy array
+                    thisList = list(thisSet)
+                    thisList.sort()
+                    total_ind_parm_lens.append(len(thisList))
+                    if self._madParmObj.isInteger(key2):
+                        data = numpy.array(thisList, dtype=numpy.int64)
+                    elif self._madParmObj.isString(key2):
+                        strLen = self._madParmObj.getStringLen(key2)
+                        data = numpy.array(thisList, dtype=numpy.dtype('S%i' % (strLen)))
                     else:
-                        dset = numpy.zeros((len(unique_times),), dtype=numpy.float64)
-                        dset[:] = numpy.nan
-                    oneDGroup.create_dataset(parm, data=dset)
-            
-            # two D parm arrays
-            twoDGroup = thisGroup.create_group('2D Parameters')
-            self._addDataParametersTable(twoDGroup, 2)
-            
-            # get shape of 2D data (number of dimensions dynamic)
-            twoDShape = []
-            for indParm in indParmList:
-                if indParm in self._arraySplitParms:
-                    # not needed
-                    continue
-                twoDShape.append(len(thisDict[indParm]))
-            twoDShape.append(len(unique_times))
-            for parm in recLayout.dtype.names[len(self.requiredFields):]:
-                if recLayout[parm][0] == 2:
-                    if self._madParmObj.isInteger(parm):
-                        dset = numpy.zeros(twoDShape, dtype=numpy.int64)
-                        dset[:] = numpy.iinfo(numpy.int64).min
-                    elif self._madParmObj.isString(parm):
-                        strLen = self._madParmObj.getStringLen(parm)
-                        dset = numpy.zeros(twoDShape, dtype=numpy.dtype(("S" + str(strLen))))
-                    else:
-                        dset = numpy.zeros(twoDShape, dtype=numpy.float64)
-                        dset[:] = numpy.nan
-                    twoDGroup.create_dataset(parm, data=dset)
+                        data = numpy.array(thisList, dtype=numpy.float64)
+                    arrDict[key][key2] = data
                     
-        # flush file
-        f.close()
-        f = h5py.File(self._fullFilename, 'a')
-        table = f['Data']['Table Layout']
-        recLayout = f['Metadata']['_record_layout']
-        
-        # now loop through Table Layout and populate all the 1 and 2 d arrays
-        step = 10 # number of records to load at once
-        total_steps = int(len(self._recIndexList) / step)
-        if total_steps * step < len(self._recIndexList):
-            total_steps += 1
-        for i in range(total_steps):
-            startTimeIndex = i*step
-            if (i+1)*step < len(self._recIndexList) - 1:
-                endTimeIndex = (i+1)*step - 1
-            else:
-                endTimeIndex = len(self._recIndexList) - 1
-            table_data = table[self._recIndexList[startTimeIndex][0]:self._recIndexList[endTimeIndex][1]]
-            # loop through all groups
-            for key in list(arrDict.keys()):
-                tableSubset = _TableSubset(self._arraySplitParms, key, table_data)
-                # its possible no data in this slice for this subset
-                if len(tableSubset.table) == 0:
-                    continue
+                # add the max number of records for this group
+                tmp = total_ind_parm_lens[0]
+                for v in total_ind_parm_lens[1:]:
+                    tmp *= v
+                total_allowed_records += tmp
                 
-                timestamps = arrDict[key]['ut1_unix']
+                # protect against too many ind parm combinations (too sparse an array)
+                total_ind_combos = total_ind_parm_lens[1]
+                for v in total_ind_parm_lens[2:]:
+                    total_ind_combos *= v
+                if total_ind_combos > 1000000:
+                    print(('Skipping array creation since %i independent parm combinations would create too big an array' % (total_ind_combos)))
+                    #f.close()
+                    return
+                
+            if len(table) > total_allowed_records:
+                raise ValueError('Found %i lines in table, but values of times and ind parms %s allow maximum of %i values in file %s' % \
+                    (len(table), str(indParmList), total_allowed_records, self._fullFilename))
+            
+            # add "Parameters Used to Split Array Data" to Metadata
+            if not self._arraySplitParms == []:
+                arrSplitParmDesc = []
+                longestMnemStr = 0
+                longestDescStr = 0
+                for arrSplitParm in self._arraySplitParms:
+                    if len(arrSplitParm) > longestMnemStr:
+                        longestMnemStr = len(arrSplitParm)
+                    arrSplitParmDesc.append(self._madParmObj.getSimpleParmDescription(arrSplitParm))
+                    if len(arrSplitParmDesc[-1]) > longestDescStr:
+                        longestDescStr = len(arrSplitParmDesc[-1])
+                arrSplitArr = numpy.recarray((len(self._arraySplitParms),),
+                                            dtype = [('mnemonic', '|S%i' % (longestMnemStr)),
+                                                    ('description', '|S%i' % (longestDescStr))])
+                for i, arrSplitParm in enumerate(self._arraySplitParms):
+                    arrSplitArr[i]['mnemonic'] = arrSplitParm
+                    arrSplitArr[i]['description'] = arrSplitParmDesc[i]
+                
+                metadataGroup.create_dataset('Parameters Used to Split Array Data', data=arrSplitArr)
+                
 
-                # get index of first and last time found
-                first_ut1_unix = tableSubset.table[0]['ut1_unix']
-                last_ut1_unix = tableSubset.table[-1]['ut1_unix']
-                time_index_1 = numpy.searchsorted(timestamps, first_ut1_unix)
-                time_index_2 = numpy.searchsorted(timestamps, last_ut1_unix) + 1
-                groupName = tableSubset.getGroupName()
+            arrGroup = f['Data'].create_group("Array Layout")
+            
+            # stage 1 - write all needed tables with nan values
+            for key in list(arrDict.keys()):
+                if key != '':
+                    groupName = self._getGroupName(key)
+                    thisGroup = arrGroup.create_group(groupName)
+                else:
+                    thisGroup = arrGroup # no subgroups needed
+                    
+                self._addLayoutDescription(thisGroup)
+                    
+                """thisDict is dict of key = 'ut1_unix' and ind 2d parm names (possibly minus arraySplitParms), values
+                    = ordered numpy array of all unique values"""
+                thisDict = arrDict[key] 
+                                        
+                unique_times = thisDict['ut1_unix']
+                
+                ts_dset = thisGroup.create_dataset("timestamps", data=unique_times)
+                for indParm in indParmList:
+                    if indParm in self._arraySplitParms:
+                        # not needed
+                        continue
+                    dataset = thisDict[indParm]
+                    thisGroup.create_dataset(indParm, data=dataset)
+                    
+                # one D parm arrays
+                oneDGroup = thisGroup.create_group('1D Parameters')
+                self._addDataParametersTable(oneDGroup, 1)
+                for parm in recLayout.dtype.names[len(self.requiredFields):]:
+                    if recLayout[parm][0] == 1:
+                        if self._madParmObj.isInteger(parm):
+                            dset = numpy.zeros((len(unique_times),), dtype=numpy.int64)
+                            dset[:] = numpy.iinfo(numpy.int64).min
+                        elif self._madParmObj.isString(parm):
+                            strLen = self._madParmObj.getStringLen(parm)
+                            dset = numpy.zeros((len(unique_times),), dtype=numpy.dtype(("S" + str(strLen))))
+                        else:
+                            dset = numpy.zeros((len(unique_times),), dtype=numpy.float64)
+                            dset[:] = numpy.nan
+                        oneDGroup.create_dataset(parm, data=dset)
+                
+                # two D parm arrays
+                twoDGroup = thisGroup.create_group('2D Parameters')
+                self._addDataParametersTable(twoDGroup, 2)
+                
                 # get shape of 2D data (number of dimensions dynamic)
                 twoDShape = []
                 for indParm in indParmList:
                     if indParm in self._arraySplitParms:
                         # not needed
                         continue
-                    twoDShape.append(len(arrDict[key][indParm]))
-                twoDShape.append(time_index_2 - time_index_1)
-                # ind parm indexes
-                indParmIndexDict = {}
-                for indParm in indParmList:
-                    if indParm in self._arraySplitParms:
-                        # not needed
-                        continue
-                    values = tableSubset.table[indParm]
-                    indParmIndexDict[indParm] = numpy.zeros((len(tableSubset.table),), int)
-                    for i in range(len(arrDict[key][indParm])):
-                        v = arrDict[key][indParm][i]
-                        indices = numpy.argwhere(values == v)
-                        indParmIndexDict[indParm][indices] = i
-                    
-                # finally time dimension
-                values = tableSubset.table['ut1_unix']
-                timeIndices = numpy.zeros((len(tableSubset.table),), int)
-                thisTimestampArr = numpy.unique(tableSubset.table['ut1_unix'])
-                for i in range(len(thisTimestampArr)):
-                    v = thisTimestampArr[i]
-                    indices = numpy.argwhere(values == v)
-                    timeIndices[indices] = i
-
-                # concatenate
-                tableIndex = []
-                for indParm in indParmList:
-                    if indParm in self._arraySplitParms:
-                        # not needed
-                        continue
-                    tableIndex.append(indParmIndexDict[indParm])
-                tableIndex.append(timeIndices)
+                    twoDShape.append(len(thisDict[indParm]))
+                twoDShape.append(len(unique_times))
                 for parm in recLayout.dtype.names[len(self.requiredFields):]:
-                    if recLayout[parm][0] == 1:
-                        dset = tableSubset.table[parm][tableSubset.oneDIndices]
-                        if not groupName is None:
-                            f['Data']['Array Layout'][groupName]['1D Parameters'][parm][time_index_1:time_index_2] = dset
-                        else:
-                            f['Data']['Array Layout']['1D Parameters'][parm][time_index_1:time_index_2] = dset
-                    elif recLayout[parm][0] == 2:
+                    if recLayout[parm][0] == 2:
                         if self._madParmObj.isInteger(parm):
-                            dset2 = numpy.zeros(tuple(twoDShape), dtype=numpy.int64)
-                            dset2[:] = numpy.iinfo(numpy.int64).min
+                            dset = numpy.zeros(twoDShape, dtype=numpy.int64)
+                            dset[:] = numpy.iinfo(numpy.int64).min
                         elif self._madParmObj.isString(parm):
                             strLen = self._madParmObj.getStringLen(parm)
-                            dset2 = numpy.zeros(tuple(twoDShape), dtype=numpy.dtype(("S" + str(strLen))))
-                            dset2[:] = ''
+                            dset = numpy.zeros(twoDShape, dtype=numpy.dtype(("S" + str(strLen))))
                         else:
-                            dset2 = numpy.zeros(tuple(twoDShape), dtype=numpy.float64)
-                            dset2[:] = numpy.nan
-                        dset2[tuple(tableIndex)] = tableSubset.table[parm]
+                            dset = numpy.zeros(twoDShape, dtype=numpy.float64)
+                            dset[:] = numpy.nan
+                        twoDGroup.create_dataset(parm, data=dset)
+                    
+        # flush file
+        #f.close()
+
+        with h5py.File(self._fullFilename, 'a') as f:
+            table = f['Data']['Table Layout']
+            recLayout = f['Metadata']['_record_layout']
+            
+            # now loop through Table Layout and populate all the 1 and 2 d arrays
+            step = 10 # number of records to load at once
+            total_steps = int(len(self._recIndexList) / step)
+            if total_steps * step < len(self._recIndexList):
+                total_steps += 1
+            for i in range(total_steps):
+                startTimeIndex = i*step
+                if (i+1)*step < len(self._recIndexList) - 1:
+                    endTimeIndex = (i+1)*step - 1
+                else:
+                    endTimeIndex = len(self._recIndexList) - 1
+                table_data = table[self._recIndexList[startTimeIndex][0]:self._recIndexList[endTimeIndex][1]]
+                # loop through all groups
+                for key in list(arrDict.keys()):
+                    tableSubset = _TableSubset(self._arraySplitParms, key, table_data)
+                    # its possible no data in this slice for this subset
+                    if len(tableSubset.table) == 0:
+                        continue
+                    
+                    timestamps = arrDict[key]['ut1_unix']
+
+                    # get index of first and last time found
+                    first_ut1_unix = tableSubset.table[0]['ut1_unix']
+                    last_ut1_unix = tableSubset.table[-1]['ut1_unix']
+                    time_index_1 = numpy.searchsorted(timestamps, first_ut1_unix)
+                    time_index_2 = numpy.searchsorted(timestamps, last_ut1_unix) + 1
+                    groupName = tableSubset.getGroupName()
+                    # get shape of 2D data (number of dimensions dynamic)
+                    twoDShape = []
+                    for indParm in indParmList:
+                        if indParm in self._arraySplitParms:
+                            # not needed
+                            continue
+                        twoDShape.append(len(arrDict[key][indParm]))
+                    twoDShape.append(time_index_2 - time_index_1)
+                    # ind parm indexes
+                    indParmIndexDict = {}
+                    for indParm in indParmList:
+                        if indParm in self._arraySplitParms:
+                            # not needed
+                            continue
+                        values = tableSubset.table[indParm]
+                        indParmIndexDict[indParm] = numpy.zeros((len(tableSubset.table),), int)
+                        for i in range(len(arrDict[key][indParm])):
+                            v = arrDict[key][indParm][i]
+                            indices = numpy.argwhere(values == v)
+                            indParmIndexDict[indParm][indices] = i
                         
-                        if not groupName is None:
-                            fdata = f['Data']['Array Layout'][groupName]['2D Parameters'][parm]
-                        else:
-                            fdata = f['Data']['Array Layout']['2D Parameters'][parm]
+                    # finally time dimension
+                    values = tableSubset.table['ut1_unix']
+                    timeIndices = numpy.zeros((len(tableSubset.table),), int)
+                    thisTimestampArr = numpy.unique(tableSubset.table['ut1_unix'])
+                    for i in range(len(thisTimestampArr)):
+                        v = thisTimestampArr[i]
+                        indices = numpy.argwhere(values == v)
+                        timeIndices[indices] = i
+
+                    # concatenate
+                    tableIndex = []
+                    for indParm in indParmList:
+                        if indParm in self._arraySplitParms:
+                            # not needed
+                            continue
+                        tableIndex.append(indParmIndexDict[indParm])
+                    tableIndex.append(timeIndices)
+                    for parm in recLayout.dtype.names[len(self.requiredFields):]:
+                        if recLayout[parm][0] == 1:
+                            dset = tableSubset.table[parm][tableSubset.oneDIndices]
+                            if not groupName is None:
+                                f['Data']['Array Layout'][groupName]['1D Parameters'][parm][time_index_1:time_index_2] = dset
+                            else:
+                                f['Data']['Array Layout']['1D Parameters'][parm][time_index_1:time_index_2] = dset
+                        elif recLayout[parm][0] == 2:
+                            if self._madParmObj.isInteger(parm):
+                                dset2 = numpy.zeros(tuple(twoDShape), dtype=numpy.int64)
+                                dset2[:] = numpy.iinfo(numpy.int64).min
+                            elif self._madParmObj.isString(parm):
+                                strLen = self._madParmObj.getStringLen(parm)
+                                dset2 = numpy.zeros(tuple(twoDShape), dtype=numpy.dtype(("S" + str(strLen))))
+                                dset2[:] = ''
+                            else:
+                                dset2 = numpy.zeros(tuple(twoDShape), dtype=numpy.float64)
+                                dset2[:] = numpy.nan
+                            dset2[tuple(tableIndex)] = tableSubset.table[parm]
                             
-                        if len(indParmList) - self._num2DSplit == 1:
-                            fdata[:,time_index_1:time_index_2] = dset2
-                        elif len(indParmList) - self._num2DSplit == 2:
-                            fdata[:,:,time_index_1:time_index_2] = dset2
-                        elif len(indParmList) - self._num2DSplit == 3:
-                            fdata[:,:,:,time_index_1:time_index_2] = dset2
-                        elif len(indParmList) - self._num2DSplit == 4:
-                            fdata[:,:,:,:,time_index_1:time_index_2] = dset2
-                        elif len(indParmList) - self._num2DSplit == 5:
-                            fdata[:,:,:,:,:,time_index_1:time_index_2] = dset2
-                        else:
-                            raise ValueError('Can not handle more than 5 independent spatial parms - there are %i' % (len(indParmList)))
-                        
-        f.close()
+                            if not groupName is None:
+                                fdata = f['Data']['Array Layout'][groupName]['2D Parameters'][parm]
+                            else:
+                                fdata = f['Data']['Array Layout']['2D Parameters'][parm]
+                                
+                            if len(indParmList) - self._num2DSplit == 1:
+                                fdata[:,time_index_1:time_index_2] = dset2
+                            elif len(indParmList) - self._num2DSplit == 2:
+                                fdata[:,:,time_index_1:time_index_2] = dset2
+                            elif len(indParmList) - self._num2DSplit == 3:
+                                fdata[:,:,:,time_index_1:time_index_2] = dset2
+                            elif len(indParmList) - self._num2DSplit == 4:
+                                fdata[:,:,:,:,time_index_1:time_index_2] = dset2
+                            elif len(indParmList) - self._num2DSplit == 5:
+                                fdata[:,:,:,:,:,time_index_1:time_index_2] = dset2
+                            else:
+                                raise ValueError('Can not handle more than 5 independent spatial parms - there are %i' % (len(indParmList)))
+                      
             
                     
     def _writeNetCDF4(self, f, arraySplittingParms):
@@ -6007,223 +5992,223 @@ class convertToNetCDF4:
         """
         madParmObj = madrigal.data.MadrigalParameters()
         
-        self._fi = h5py.File(inputHdf5, 'r')
-        if 'Array Layout' not in self._fi['Data']:
-            if os.path.getsize(inputHdf5) < 50000000:
-                # for smaller files we simply go through the slower full cedar conversion
-                cedarObj = MadrigalCedarFile(inputHdf5)
-                cedarObj.write('netCDF4', outputNC)
-                return
-            else:
-                # file is to big to load into memory at once, read only 10 records at once at write to file
-                # parm IndexDict is a dictionary with key = timestamps and ind spatial parm names,
-                # value = dictionary of keys = unique values, value = index
-                # temp only
-                total = 0
-                t = time.time()
-                parmIndexDict = self._getParmIndexDict()
-                self._fi.close()
-                madCedarObj = madrigal.cedar.MadrigalCedarFile(inputHdf5, maxRecords=10)
-                madCedarObj.dump('netCDF4', outputNC, parmIndexDict)
-                total += 10
-                while (True):
+        with h5py.File(inputHdf5, 'r') as self._fi:
+            if 'Array Layout' not in self._fi['Data']:
+                if os.path.getsize(inputHdf5) < 50000000:
+                    # for smaller files we simply go through the slower full cedar conversion
+                    cedarObj = MadrigalCedarFile(inputHdf5)
+                    cedarObj.write('netCDF4', outputNC)
+                    return
+                else:
+                    # file is to big to load into memory at once, read only 10 records at once at write to file
+                    # parm IndexDict is a dictionary with key = timestamps and ind spatial parm names,
+                    # value = dictionary of keys = unique values, value = index
                     # temp only
-                    print('%i done so far in %f secs' % (total, time.time()-t))
-                    newRecs, isComplete = madCedarObj.loadNextRecords(10)
-                    if isComplete:
-                        break
+                    total = 0
+                    t = time.time()
+                    parmIndexDict = self._getParmIndexDict()
+                    #self._fi.close()
+                    madCedarObj = madrigal.cedar.MadrigalCedarFile(inputHdf5, maxRecords=10)
                     madCedarObj.dump('netCDF4', outputNC, parmIndexDict)
-                    if newRecs < 10:
-                        break
-                    total += newRecs
+                    total += 10
+                    while (True):
+                        # temp only
+                        print('%i done so far in %f secs' % (total, time.time()-t))
+                        newRecs, isComplete = madCedarObj.loadNextRecords(10)
+                        if isComplete:
+                            break
+                        madCedarObj.dump('netCDF4', outputNC, parmIndexDict)
+                        if newRecs < 10:
+                            break
+                        total += newRecs
+                        
+                    # compress
+                    filename, file_extension = os.path.splitext(outputNC)
+                    # tmp file name to use to run h5repack
+                    tmpFile = filename + '_tmp' + file_extension
+                    cmd = 'h5repack -i %s -o %s --filter=GZIP=4' % (outputNC, tmpFile)
+                    try:
+                        subprocess.check_call(shlex.split(cmd))
+                    except:
+                        traceback.print_exc()
+                        return
                     
-                # compress
-                filename, file_extension = os.path.splitext(outputNC)
-                # tmp file name to use to run h5repack
-                tmpFile = filename + '_tmp' + file_extension
-                cmd = 'h5repack -i %s -o %s --filter=GZIP=4' % (outputNC, tmpFile)
-                try:
-                    subprocess.check_call(shlex.split(cmd))
-                except:
-                    traceback.print_exc()
+                    shutil.move(tmpFile, outputNC)
+                        
                     return
                 
-                shutil.move(tmpFile, outputNC)
+            with netCDF4.Dataset(outputNC, 'w', format='NETCDF4') as self._fo:
+                self._fo.catalog_text = self.getCatalogText()
+                self._fo.header_text = self.getHeaderText()
+                
+                # write Experiment Parameters
+                experimentParameters = self._fi['Metadata']['Experiment Parameters']
+                for i in range(len(experimentParameters)):
+                    name = experimentParameters['name'][i]
+                    if type(name) in (bytes, numpy.bytes_):
+                        name = name.decode("utf8")
+                    # make text acceptable attribute names
+                    name = name.replace(' ', '_')
+                    name = name.replace('(s)', '')
+                    self._fo.setncattr(name, experimentParameters['value'][i])
                     
-                return
-
-        self._fo = netCDF4.Dataset(outputNC, 'w', format='NETCDF4')
-        self._fo.catalog_text = self.getCatalogText()
-        self._fo.header_text = self.getHeaderText()
-        
-        # write Experiment Parameters
-        experimentParameters = self._fi['Metadata']['Experiment Parameters']
-        for i in range(len(experimentParameters)):
-            name = experimentParameters['name'][i]
-            if type(name) in (bytes, numpy.bytes_):
-                name = name.decode("utf8")
-            # make text acceptable attribute names
-            name = name.replace(' ', '_')
-            name = name.replace('(s)', '')
-            self._fo.setncattr(name, experimentParameters['value'][i])
-            
-        indParmListOrg = [parm[0].lower() for parm in self._fi['Metadata']['Independent Spatial Parameters']]
-        indParmList = []
-        for indParm in indParmListOrg:
-            if type(indParm) in (numpy.bytes_, bytes):
-                indParmList.append(indParm.decode('utf8'))
-            else:
-                indParmList.append(indParm)
-            
-            
-        # split parms - if any
-        has_split = 'Parameters Used to Split Array Data' in list(self._fi['Metadata'].keys())
-        arraySplittingMnemonics = []
-        if has_split:
-            arraySplittingParms = self._fi['Metadata']['Parameters Used to Split Array Data']
-            arrSplitParmDesc = ''
-            for i in range(len(arraySplittingParms)):
-                arrSplitParmDesc += '%s: ' % (arraySplittingParms[i]['mnemonic'].lower())
-                arrSplitParmDesc += '%s' % (arraySplittingParms[i]['description'].lower())
-                arraySplittingMnemonic = arraySplittingParms[i]['mnemonic'].lower()
-                if type(arraySplittingMnemonic) in (numpy.bytes_, bytes):
-                    arraySplittingMnemonic = arraySplittingMnemonic.decode('utf8')
-                arraySplittingMnemonics.append(arraySplittingMnemonic)
-                if arraySplittingParms[i] != arraySplittingParms[-1]:
-                    arrSplitParmDesc += ' -- '
-            self._fo.parameters_used_to_split_data = arrSplitParmDesc
-            
-        if has_split:
-            names = list(self._fi['Data']['Array Layout'].keys())
-            groups = [self._fi['Data']['Array Layout'][name] for name in names]
-        else:
-            names = [None]
-            groups = [self._fi['Data']['Array Layout']]
-            
-            
-        # loop through each split array (or just top level, if none
-        for i in range(len(groups)):
-            name = names[i]
-            if not name is None:
-                nc_name = name.strip().replace(' ', '_')
-                thisGroup = self._fo.createGroup(nc_name)
-                hdf5Group = self._fi['Data']['Array Layout'][name]
-            else:
-                thisGroup = self._fo
-                hdf5Group = self._fi['Data']['Array Layout']
-                
-            times = hdf5Group['timestamps']
-                
-            # next step - create dimensions
-            dims = []
-            
-            # first time dim
-            thisGroup.createDimension("timestamps", len(times))
-            timeVar = thisGroup.createVariable("timestamps", 'f8', ("timestamps",),
-                                               zlib=True)
-            timeVar.units = 'Unix seconds'
-            timeVar.description = 'Number of seconds since UT midnight 1970-01-01'
-            timeVar[:] = times
-            dims.append("timestamps")
-            
-            # next ind parms, because works well with ncview that way
-            for indParm in indParmList:
-                this_name = indParm
-                if this_name[0] == '-':
-                    this_name = 'neg' + this_name
-                if indParm in arraySplittingMnemonics:
-                    continue
-                thisGroup.createDimension(indParm, len(hdf5Group[indParm]))
-                if madParmObj.isInteger(indParm):
-                    thisVar = thisGroup.createVariable(this_name, 'i8', (indParm,),
-                                                       zlib=True)
-                    thisVar[:] = hdf5Group[indParm]
-                elif madParmObj.isString(indParm):
-                    slen = len(hdf5Group[indParm][0])
-                    dtype = 'S%i' % (slen)
-                    thisVar = thisGroup.createVariable(this_name, dtype, (indParm,),
-                                                       zlib=True)
-                    for i in range(len(hdf5Group[indParm])):
-                        thisVar[i] = str(hdf5Group[indParm][i])
+                indParmListOrg = [parm[0].lower() for parm in self._fi['Metadata']['Independent Spatial Parameters']]
+                indParmList = []
+                for indParm in indParmListOrg:
+                    if type(indParm) in (numpy.bytes_, bytes):
+                        indParmList.append(indParm.decode('utf8'))
+                    else:
+                        indParmList.append(indParm)
+                    
+                    
+                # split parms - if any
+                has_split = 'Parameters Used to Split Array Data' in list(self._fi['Metadata'].keys())
+                arraySplittingMnemonics = []
+                if has_split:
+                    arraySplittingParms = self._fi['Metadata']['Parameters Used to Split Array Data']
+                    arrSplitParmDesc = ''
+                    for i in range(len(arraySplittingParms)):
+                        arrSplitParmDesc += '%s: ' % (arraySplittingParms[i]['mnemonic'].lower())
+                        arrSplitParmDesc += '%s' % (arraySplittingParms[i]['description'].lower())
+                        arraySplittingMnemonic = arraySplittingParms[i]['mnemonic'].lower()
+                        if type(arraySplittingMnemonic) in (numpy.bytes_, bytes):
+                            arraySplittingMnemonic = arraySplittingMnemonic.decode('utf8')
+                        arraySplittingMnemonics.append(arraySplittingMnemonic)
+                        if arraySplittingParms[i] != arraySplittingParms[-1]:
+                            arrSplitParmDesc += ' -- '
+                    self._fo.parameters_used_to_split_data = arrSplitParmDesc
+                    
+                if has_split:
+                    names = list(self._fi['Data']['Array Layout'].keys())
+                    groups = [self._fi['Data']['Array Layout'][name] for name in names]
                 else:
-                    thisVar = thisGroup.createVariable(this_name, 'f8', (indParm,),
-                                                       zlib=True)
-                    thisVar[:] = hdf5Group[indParm]
-                thisVar.units = madParmObj.getParmUnits(indParm)
-                thisVar.description = madParmObj.getSimpleParmDescription(indParm)
-                dims.append(indParm)
+                    names = [None]
+                    groups = [self._fi['Data']['Array Layout']]
+                    
+                    
+                # loop through each split array (or just top level, if none
+                for i in range(len(groups)):
+                    name = names[i]
+                    if not name is None:
+                        nc_name = name.strip().replace(' ', '_')
+                        thisGroup = self._fo.createGroup(nc_name)
+                        hdf5Group = self._fi['Data']['Array Layout'][name]
+                    else:
+                        thisGroup = self._fo
+                        hdf5Group = self._fi['Data']['Array Layout']
+                        
+                    times = hdf5Group['timestamps']
+                        
+                    # next step - create dimensions
+                    dims = []
+                    
+                    # first time dim
+                    thisGroup.createDimension("timestamps", len(times))
+                    timeVar = thisGroup.createVariable("timestamps", 'f8', ("timestamps",),
+                                                    zlib=True)
+                    timeVar.units = 'Unix seconds'
+                    timeVar.description = 'Number of seconds since UT midnight 1970-01-01'
+                    timeVar[:] = times
+                    dims.append("timestamps")
+                    
+                    # next ind parms, because works well with ncview that way
+                    for indParm in indParmList:
+                        this_name = indParm
+                        if this_name[0] == '-':
+                            this_name = 'neg' + this_name
+                        if indParm in arraySplittingMnemonics:
+                            continue
+                        thisGroup.createDimension(indParm, len(hdf5Group[indParm]))
+                        if madParmObj.isInteger(indParm):
+                            thisVar = thisGroup.createVariable(this_name, 'i8', (indParm,),
+                                                            zlib=True)
+                            thisVar[:] = hdf5Group[indParm]
+                        elif madParmObj.isString(indParm):
+                            slen = len(hdf5Group[indParm][0])
+                            dtype = 'S%i' % (slen)
+                            thisVar = thisGroup.createVariable(this_name, dtype, (indParm,),
+                                                            zlib=True)
+                            for i in range(len(hdf5Group[indParm])):
+                                thisVar[i] = str(hdf5Group[indParm][i])
+                        else:
+                            thisVar = thisGroup.createVariable(this_name, 'f8', (indParm,),
+                                                            zlib=True)
+                            thisVar[:] = hdf5Group[indParm]
+                        thisVar.units = madParmObj.getParmUnits(indParm)
+                        thisVar.description = madParmObj.getSimpleParmDescription(indParm)
+                        dims.append(indParm)
+                        
+                    
+                        
+                    # get all one d data
+                    oneDParms = list(hdf5Group['1D Parameters'].keys())
+                    for oneDParm in oneDParms:
+                        this_name = oneDParm
+                        if this_name[0] == '-':
+                            this_name = 'neg' + this_name
+                        if type(oneDParm) in (numpy.bytes_, bytes):
+                            oneDParm = oneDParm.decode('utf8')
+                        if oneDParm in indParmList:
+                            if oneDParm not in arraySplittingMnemonics:
+                                continue
+                        if oneDParm.find('Data Parameters') != -1:
+                            continue
+                        if madParmObj.isInteger(oneDParm):
+                            oneDVar = thisGroup.createVariable(this_name, 'i8', (dims[0],),
+                                                            zlib=True)
+                        elif madParmObj.isString(oneDParm):
+                            slen = len(hdf5Group['1D Parameters'][oneDParm][0])
+                            dtype = 'S%i' % (slen)
+                            oneDVar = thisGroup.createVariable(this_name, dtype, (dims[0],),
+                                                            zlib=True)
+                        else:
+                            oneDVar = thisGroup.createVariable(this_name, 'f8', (dims[0],),
+                                                            zlib=True)
+                        oneDVar.units = madParmObj.getParmUnits(oneDParm)
+                        oneDVar.description = madParmObj.getSimpleParmDescription(oneDParm)
+                        try:
+                            oneDVar[:] = hdf5Group['1D Parameters'][oneDParm]
+                        except:
+                            oneDVar[:] = hdf5Group['1D Parameters'][oneDParm][()]
+                        
+                        
+                    # get all two d data
+                    twoDParms = list(hdf5Group['2D Parameters'].keys())
+                    for twoDParm in twoDParms:
+                        this_name = twoDParm
+                        if this_name[0] == '-':
+                            this_name = 'neg' + this_name
+                        if type(twoDParm) in (numpy.bytes_, bytes):
+                            twoDParm = twoDParm.decode('utf8')
+                        if twoDParm.find('Data Parameters') != -1:
+                            continue
+                        if twoDParm in indParmList:
+                            if twoDParm not in arraySplittingMnemonics:
+                                continue
+                        if madParmObj.isInteger(twoDParm):
+                            twoDVar = thisGroup.createVariable(this_name, 'i8', dims,
+                                                            zlib=True)
+                        elif madParmObj.isString(twoDParm):
+                            slen = len(hdf5Group['2D Parameters'][twoDParm][0])
+                            dtype = 'S%i' % (slen)
+                            twoDVar = thisGroup.createVariable(this_name, dtype, dims,
+                                                            zlib=True)
+                        else:
+                            twoDVar = thisGroup.createVariable(this_name, 'f8', dims,
+                                                            zlib=True)
+                        twoDVar.units = madParmObj.getParmUnits(twoDParm)
+                        twoDVar.description = madParmObj.getSimpleParmDescription(twoDParm)
+                        # move the last dim in Hdf5 (time) to be the first now
+                        reshape = list(range(len(dims)))
+                        newShape = reshape[-1:] + reshape[0:-1]
+                        data = numpy.transpose(hdf5Group['2D Parameters'][twoDParm], newShape)
+                        twoDVar[:] = data
+                        data = None
                 
-            
-                
-            # get all one d data
-            oneDParms = list(hdf5Group['1D Parameters'].keys())
-            for oneDParm in oneDParms:
-                this_name = oneDParm
-                if this_name[0] == '-':
-                    this_name = 'neg' + this_name
-                if type(oneDParm) in (numpy.bytes_, bytes):
-                    oneDParm = oneDParm.decode('utf8')
-                if oneDParm in indParmList:
-                    if oneDParm not in arraySplittingMnemonics:
-                        continue
-                if oneDParm.find('Data Parameters') != -1:
-                    continue
-                if madParmObj.isInteger(oneDParm):
-                    oneDVar = thisGroup.createVariable(this_name, 'i8', (dims[0],),
-                                                       zlib=True)
-                elif madParmObj.isString(oneDParm):
-                    slen = len(hdf5Group['1D Parameters'][oneDParm][0])
-                    dtype = 'S%i' % (slen)
-                    oneDVar = thisGroup.createVariable(this_name, dtype, (dims[0],),
-                                                       zlib=True)
-                else:
-                    oneDVar = thisGroup.createVariable(this_name, 'f8', (dims[0],),
-                                                       zlib=True)
-                oneDVar.units = madParmObj.getParmUnits(oneDParm)
-                oneDVar.description = madParmObj.getSimpleParmDescription(oneDParm)
-                try:
-                    oneDVar[:] = hdf5Group['1D Parameters'][oneDParm]
-                except:
-                    oneDVar[:] = hdf5Group['1D Parameters'][oneDParm][()]
-                
-                
-            # get all two d data
-            twoDParms = list(hdf5Group['2D Parameters'].keys())
-            for twoDParm in twoDParms:
-                this_name = twoDParm
-                if this_name[0] == '-':
-                    this_name = 'neg' + this_name
-                if type(twoDParm) in (numpy.bytes_, bytes):
-                    twoDParm = twoDParm.decode('utf8')
-                if twoDParm.find('Data Parameters') != -1:
-                    continue
-                if twoDParm in indParmList:
-                    if twoDParm not in arraySplittingMnemonics:
-                        continue
-                if madParmObj.isInteger(twoDParm):
-                    twoDVar = thisGroup.createVariable(this_name, 'i8', dims,
-                                                       zlib=True)
-                elif madParmObj.isString(twoDParm):
-                    slen = len(hdf5Group['2D Parameters'][twoDParm][0])
-                    dtype = 'S%i' % (slen)
-                    twoDVar = thisGroup.createVariable(this_name, dtype, dims,
-                                                       zlib=True)
-                else:
-                    twoDVar = thisGroup.createVariable(this_name, 'f8', dims,
-                                                       zlib=True)
-                twoDVar.units = madParmObj.getParmUnits(twoDParm)
-                twoDVar.description = madParmObj.getSimpleParmDescription(twoDParm)
-                # move the last dim in Hdf5 (time) to be the first now
-                reshape = list(range(len(dims)))
-                newShape = reshape[-1:] + reshape[0:-1]
-                data = numpy.transpose(hdf5Group['2D Parameters'][twoDParm], newShape)
-                twoDVar[:] = data
-                data = None
-            
                 
         
-        self._fo.close()
-        self._fi.close()
+        #self._fo.close()
+        #self._fi.close()
         
         
     def getCatalogText(self):
