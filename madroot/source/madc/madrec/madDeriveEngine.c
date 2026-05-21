@@ -279,13 +279,6 @@ static const char * getJGeodIn[]           = {"J4", "J5", "J6", "BN", "BE", "BD"
 static const char * getJGeodOut[]          = {"J1", "J2", "J3"};
 
 /* neutral atmosphere */
-static const char * getNeutIn[]           = {"UT1", "UT2", "GDLAT", "GLON", "GDALT"};
-static const char * getNeutOut[]          = {"TNM", "TINFM", "MOL", "NTOTL", "NN2L",
-                                             "NO2L", "NOL", "NARL", "NHEL", "NHL",
-                                             "NN4SL", "NPRESL", "PSH",
-                                             "DTNM", "DTINFM", "DMOL", "DNTOTL", "DNN2L",
-                                             "DNO2L", "DNOL", "DNARL", "DNHEL", "DNHL",
-                                             "DNN4SL", "DNPRESL", "DPSH"};
 static const char * getTnIn[]             = {"TI", "TE", "NE", "PH+", "NOL", "NHL",
                                              "NN4SL", "NO2L", "NHEL"};
 static const char * getTnOut[]            = {"TN"};
@@ -446,7 +439,6 @@ static CompiledExt gCompExtList[] = {{ getPrologTime,  2,    getPrologTimeIn,  8
 				                     { getEFGeod,      7,    getEFGeodIn,      3,     getEFGeodOut},
 				                     { getJGeom,       7,    getJGeomIn,       3,     getJGeomOut},
 				                     { getJGeod,       7,    getJGeodIn,       3,     getJGeodOut},
-                                     { getNeut,        5,    getNeutIn,       26,     getNeutOut},
 				                     { getTn,          9,    getTnIn,          1,     getTnOut},
 				                     { getTnNoPhp,     8,    getTnNoPhpIn,     1,     getTnNoPhpOut},
 				                     { getDTn,        16,    getDTnIn,         1,     getDTnOut},

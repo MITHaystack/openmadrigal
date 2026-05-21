@@ -279,21 +279,6 @@ void LOOK_F77(double * SR,
               double * EL,
               double * RANGE);
 
-#define GTD7D_F77 F77_FUNC (gtd7d, GTD7D)
-
-void GTD7D_F77(int    * iyd,
-               double * sec,
-               double * gdalt,
-               double * gdlat,
-               double * glon,
-               double * slt,
-               double * f107a,
-               double * f107,
-               double * ap,
-               int    * mass,
-               double * d,
-               double * t);
-
 #define TNF_F77 F77_FUNC (tnf, TNF)
 
 double TNF_F77(double * ti,
@@ -1224,12 +1209,6 @@ int getJGeod(int inCount,
              int outCount,
              double * outputArr,
              FILE * errFile);
-
-int getNeut(int inCount,
-            double * inputArr,
-            int outCount,
-            double * outputArr,
-            FILE * errFile);
 
 int getTn(int inCount,
           double * inputArr,

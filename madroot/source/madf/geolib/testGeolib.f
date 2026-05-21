@@ -13,7 +13,7 @@ C     .. Local Arrays ..
       CHARACTER*7 TCOR(35)
 C     ..
 C     .. External Subroutines ..
-      EXTERNAL COORD,GTD7
+      EXTERNAL COORD
 C     ..
 C     .. Data statements ..
       DATA TCOR/'     AZ','     EL','  RANGE','  GDLAT','   GLON',
@@ -77,11 +77,5 @@ C
       DO 50 I = 1,2
          T(I) = 0.0D0
    50 CONTINUE
-      DO 60 I = 1,100
-         CALL GTD7D(IYD,SEC,ALT,GLAT,GLONG,STL,F107A,F107,AP,MASS,D,T)
-         WRITE (16,FMT='(F8.1,4E13.5,2X,2F8.1)') ALT,(D(J),J=1,4),
-     *     (T(J),J=1,2)
-         ALT = ALT + 10.0D0
-   60 CONTINUE
 C
       END

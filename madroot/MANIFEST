@@ -51,7 +51,6 @@ source/madf/geolib/gdmag.f
 source/madf/geolib/gdran.f
 source/madf/geolib/gdv.f
 source/madf/geolib/gmet.f
-source/madf/geolib/gtd7.f
 source/madf/geolib/hfun.f
 source/madf/geolib/integ.f
 source/madf/geolib/invar.f

@@ -25,7 +25,8 @@ dependencies = [
     "aacgmv2",
     "packaging",
     "madrigalweb",
-    "py-purecrypt"
+    "py-purecrypt",
+    "pymsis",
     ]
 
 [project.urls]

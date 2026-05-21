@@ -38,6 +38,7 @@ import numpy
 import h5py
 import aacgmv2
 import pymap3d
+import pymsis
 
 # Madrigal imports
 import madrigal.cedar
@@ -2788,11 +2789,63 @@ class MadrigalDerivationMethods:
         glon = inputArr[9]
         gdalt = inputArr[10]
         
-        madrigal._derive.madRunMsis(year, month, day, hour, minute, second,
-                                    gdlat, glon, gdalt, self.msis_ap, self.msis_fbar, 
-                                    self.msis_f107, outputArr)
+        self.madRunMsis(year, month, day, hour, minute, second,
+                        gdlat, glon, gdalt, self.msis_ap, self.msis_fbar, 
+                        self.msis_f107, outputArr)
+
         return
     
+    
+    def madRunMsis(self, year, month, day, hour, minute, second,
+                   gdlat, glon, gdalt, msis_ap, msis_fbar, msis_f107, outputArr):
+        """madRunMsis uses pymsis to run msis instead of old Fortran code
+        
+        "TNM", "TINFM", "MOL", "NTOTL", "NN2L",
+          "NO2L", "NOL", "NARL", "NHEL", "NHL",
+          "NN4SL", "NPRESL", "PSH",
+          "DTNM", "DTINFM", "DMOL", "DNTOTL", "DNN2L",
+          "DNO2L", "DNOL", "DNARL", "DNHEL", "DNHL",
+          "DNN4SL", "DNPRESL", "DPSH"
+        """
+        dates = [datetime.datetime(year, month, day, hour, minute, second)]
+        result = pymsis.calculate(dates, [glon], [gdlat], [gdalt],
+                                  [msis_f107/1.0e22], [msis_fbar/1.0e22], [msis_ap])
+        outputArr[0] = result[0][10] # TNM
+        outputArr[1] = numpy.nan # TINFM
+        try:
+            outputArr[2] = math.log10(result[0][0]) # MOL
+        except ValueError:
+            outputArr[2] = numpy.nan
+        outputArr[3] = numpy.nan # NTOTL
+        try:
+            outputArr[4] = math.log10(result[0][1]) # NN2L
+        except ValueError:
+            outputArr[4] = numpy.nan
+        try:
+            outputArr[5] = math.log10(result[0][2]) # N02L
+        except ValueError:
+            outputArr[5] = numpy.nan
+        try:
+            outputArr[6] = math.log10(result[0][3]) # NOL
+        except ValueError:
+            outputArr[6] = numpy.nan
+        try:
+            outputArr[7] = math.log10(result[0][6]) # NARL
+        except ValueError:
+            outputArr[7] = numpy.nan
+        try:
+            outputArr[8] = math.log10(result[0][4]) # NHEL
+        except ValueError:
+            outputArr[8] = numpy.nan
+        try:
+            outputArr[9] = math.log10(result[0][5]) # NHL
+        except ValueError:
+            outputArr[9] = numpy.nan
+        for i in range(10,26):
+            outputArr[i] = numpy.nan
+            
+        return
+        
     
     def getTsygan(self, inputArr, outputArr):
         """getTsygan modifies the outputArr with the values of:

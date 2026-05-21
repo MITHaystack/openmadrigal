@@ -10,7 +10,7 @@ lib_LTLIBRARIES = libgeo.la
 # ----------------------------------------------------------------------
 
 libgeo_la_SOURCES = carmel.f convrt.f coord.f coordf.f coordff.f csconv.f diplat.f dsf.f gaspct.f \
-          gdmag.f gdran.f gdv.f gmet.f gtd7.f hfun.f integ.f invar.f \
+          gdmag.f gdran.f gdv.f gmet.f hfun.f integ.f invar.f \
           invlat.f iterat.f  lines.f lintra.f look.f milmag.f minv.f \
           mtran3.f point.f rfun.f rpcart.f sprod.f startr.f          \
           tnf.f vadd.f vctcnv.f vmag.f vsub.f geo-cgm.f              \
