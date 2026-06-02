@@ -2841,7 +2841,12 @@ class MadrigalDerivationMethods:
             outputArr[9] = math.log10(result[0][5]) # NHL
         except ValueError:
             outputArr[9] = numpy.nan
-        for i in range(10,26):
+        try:
+            outputArr[10] = math.log10(result[0][7]) # NN4SL
+        except ValueError:
+            outputArr[10] = numpy.nan
+            
+        for i in range(11,26):
             outputArr[i] = numpy.nan
             
         return
