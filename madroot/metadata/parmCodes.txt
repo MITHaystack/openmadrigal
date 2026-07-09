@@ -1628,6 +1628,8 @@
 4333,Drift velocity,m/s,DRIFT,%4.4f,9,5,0,0
 4334,Receiver type,N/A,RCVR_TYPE,%20s,21,14,0,0
 4335,Antenna type,N/A,ANT_TYPE,%20s,21,14,0,0
+4336,OH emission intensity (arbitrary units),N/A,OH_EM_INTENSITY,%5.11f,17,15,0,0
+4337,Distance from Zenith,km,ZEN_DIST,%4.2f,7,1,0,0
 0,Length of this record,N/A,LTOT,%9.0f,11,-2,0,0
 0,Kind of this record,N/A,KREC,%9.0f,11,-2,0,0
 3339,Instrument Code,N/A,KINST,%i,11,-1,0,0

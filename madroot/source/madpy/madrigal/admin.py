@@ -1549,8 +1549,8 @@ class MadrigalDBAdmin:
         self.__updateLocalMetadata__()
         print('*** Updating metadata from other Madrigal sites ***')
         self.__updateGlobalMetadata__()
-        print('*** Checking OpenMadrigal for any metadata updates ***')
-        self.__checkOpenMadrigalMetadata__()
+        #print('*** Checking OpenMadrigal for any metadata updates ***')
+        #self.__checkOpenMadrigalMetadata__()
 
         # instParmTab.txt
         print('*** Rebuilding instParmTab.txt ***')
