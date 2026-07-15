@@ -1,5 +1,5 @@
 1,Millstone,millstonehill.haystack.mit.edu,,,madrigal/servlets,Bill Rideout,MIT Haystack Observatory,Route 40,,Westford,MA,01886,USA,1-781-981-5624,brideout@mit.edu
-2,EISCAT,https://madrigal.eiscat.se,madrigal,madrigal,madrigal/servlets,Thomas Ulich,EISCAT AB,Box 812,,Kiruna,,SE-98128,Sweden,+46 70 2709034,thomas.ulich@eiscat.se,3.2
+2,EISCAT,https://madrigal.eiscat.se,madrigal,madrigal,madrigal/servlets,Thomas Ulich,EISCAT AB,Box 812,,Kiruna,,SE-98128,Sweden,+46 70 2709034,madrigal@eiscat.se,3.2
 3,SRI,https://data.amisr.com,madrigal,madrigal,/madrigal/servlets,Pablo Reyes,SRI International,333 Ravenswood Avenue,,Menlo Park,CA,94025,USA,+1 650 859 2236,pablo.reyes@sri.com
 5,Cornell,landau.geo.cornell.edu,madrigal,madrigal,/madrigal/servlets,D.L. Hysell,2108 Snee Hall,Cornell University,,Ithaca,NY,14850,USA,+1 607 255 0630,dlh37@cornell.edu
 6,JRO,https://www.igp.gob.pe,observatorios/radio-observatorio-jicamarca/madrigal/,madrigal,,Juan Carlos Espinoza Guerra,Jicamarca Radio Observatory,Jicamarca,,,Lima,,Peru,511 317 2313,jespinoza@igp.gob.pe

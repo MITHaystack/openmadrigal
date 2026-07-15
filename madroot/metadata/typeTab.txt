@@ -1,8 +1,8 @@
 10,(special for MHR only)
 20,Imager time and filter metadata (image data at www.buimaging.com/data)
 21,ALO Airglow Imager
-22,NESSie Imager Meridional Keogram
-23,NESSie Imager Zonal Keogram
+22,ASU Poker Flat Imager Meridional Keogram
+23,ASU Poker Flat Imager Zonal Keogram
 1002,~1 min or ~20 s 3-freq night photon counts
 10_1040,VERTICAL VELOCITY COMPONENT ONLY
 1050,Basic Derived Parameters
