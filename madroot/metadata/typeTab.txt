@@ -18,10 +18,13 @@
 10_1810,Spectral analysis with uncoded Long Pulse
 10_1811,Coherence; spectral width; Doppler from double pulse with Barker subcoding
 11_1850,Bistatic Jicamarca-Paracas radar
+11_1911,Averaged Vertical and Zonal Drifts
 10_1910,Vertical and Zonal Drifts
 10_1911,Averaged Vertical and Zonal Drifts
 10_1912,Special Drift mode
 10_1913,Special Average Drift
+12_1910,Vertical and Zonal Drifts
+12_1911,Averaged Vertical and Zonal Drifts
 840_1950,Ion Avg drift derived from 150km echoes JULIA mode
 1951,JULIA 150-km echoes
 840_1951,JULIA 150-km echoes
@@ -1185,3 +1188,21 @@
 17579,SCINDA GPS scintillation data
 17580,SCINDA GEO scintillation data
 17581,South Pole All Sky Imager
+17582,WSPRNet Amateur Radio Signal Report
+17583,PSKReporter Amateur Radio Signal Report
+17584,Reverse Beacon Network Amateur Radio Signal Report
+1800_7810,Homogenous neutral winds
+1800_7815,Neutral winds with first order gradients
+1801_7810,Homogenous neutral winds
+1801_7815,Neutral winds with first order gradients
+1802_7810,Homogenous neutral winds
+1802_7815,Neutral winds with first order gradients
+1803_7810,Homogenous neutral winds
+1803_7815,Neutral winds with first order gradients
+1804_7810,Homogenous neutral winds
+1804_7815,Neutral winds with first order gradients
+61_1000140,Ne From Power - Long Pulse (F-region) - 90 min
+61_1000240,Ne From Power - Alternating Code (E-region) - 90 min
+61_2000140,Fitted - Long Pulse (F-region) - 90 min
+61_2000240,Fitted - Alternating Code (E-region) - 90 min
+61_3000135,Resolved Velocity - Long Pulse (F-region) - 60 min
