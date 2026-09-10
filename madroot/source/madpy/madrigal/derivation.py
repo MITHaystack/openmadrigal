@@ -358,23 +358,15 @@ MadrigalDerivedMethods["getJGeod"] = [("J4", "J5", "J6", "BN", "BE", "BD", "BMAG
 # neutral atmosphere 
 MadrigalDerivedMethods["getNeut"] = [("UT1_UNIX", "UT2_UNIX", "YEAR", "MONTH", "DAY", 
                                      "HOUR", "MIN", "SEC", "GDLAT", "GLON", "GDALT",),
-                                     ("TNM", "TINFM", "MOL", "NTOTL", "NN2L",
+                                     ("TNM", "MOL", "NN2L",
                                       "NO2L", "NOL", "NARL", "NHEL", "NHL",
-                                      "NN4SL", "NPRESL", "PSH",
-                                      "DTNM", "DTINFM", "DMOL", "DNTOTL", "DNN2L",
-                                      "DNO2L", "DNOL", "DNARL", "DNHEL", "DNHL",
-                                      "DNN4SL", "DNPRESL", "DPSH",), 'python']
+                                      "NN4SL",), 'python']
 MadrigalDerivedMethods["getTn"] = [("TI", "TE", "NE", "PH+", "NOL", "NHL",
                                              "NN4SL", "NO2L", "NHEL",),
                                    ("TN",)]
 MadrigalDerivedMethods["getTnNoPhp"] = [("TI", "TE", "NE", "NOL", "NHL",
                                              "NN4SL", "NO2L", "NHEL",),
                                         ("TN",)]
-MadrigalDerivedMethods["getDTn"] = [("TI", "TE", "NE", "NOL", "NHL",
-                                             "NN4SL", "NO2L", "NHEL",
-                                             "DTI", "DTE", "DNE", "DNOL", "DNHL",
-                                             "DNN4SL", "DNO2L", "DNHEL",),
-                                    ("DTN",)]
 
 # IRI model 
 MadrigalDerivedMethods["getIri"] = [("UT1_UNIX", "UT2_UNIX", "YEAR", "MONTH", "DAY", 
@@ -387,11 +379,6 @@ MadrigalDerivedMethods["getIri"] = [("UT1_UNIX", "UT2_UNIX", "YEAR", "MONTH", "D
 MadrigalDerivedMethods["getCond"] = [("TI", "TE", "NE", "PH+_IRI", "PO+_IRI", "NOL", "NN2L",
                                              "NO2L", "TNM", "BMAG",),
                                      ("PDCON", "PDCONL", "HLCON", "HLCONL",)]
-MadrigalDerivedMethods["getDCond"] = [("TI", "TE", "NE", "PH+_IRI", "PO+_IRI", "NOL", "NN2L",
-                                             "NO2L", "TNM", "BMAG",
-                                             "DTI", "DTE", "DNE", "DNOL", "DNN2L",
-                                             "DNO2L",),
-                                      ("DPDCON", "DPDCONL", "DHLCON", "DHLCONL",)]
 
 
 # interplanetary mag field 
@@ -2711,12 +2698,9 @@ class MadrigalDerivationMethods:
     def getNeut(self, inputArr, outputArr):
         """getNeut modifies the outputArr with the values of:
         
-          "TNM", "TINFM", "MOL", "NTOTL", "NN2L",
+          "TNM", "MOL", "NN2L",
           "NO2L", "NOL", "NARL", "NHEL", "NHL",
-          "NN4SL", "NPRESL", "PSH",
-          "DTNM", "DTINFM", "DMOL", "DNTOTL", "DNN2L",
-          "DNO2L", "DNOL", "DNARL", "DNHEL", "DNHL",
-          "DNN4SL", "DNPRESL", "DPSH"
+          "NN4SL"
             
             given an inputArr with:
             
@@ -2741,7 +2725,7 @@ class MadrigalDerivationMethods:
                 self.getGeo(inArr, outArr)
                 if numpy.isnan(outArr[2]):
                     self.msis_fbar = None
-                    outputArr[:26] = numpy.nan
+                    outputArr[:9] = numpy.nan
                     return
                 
                 if i == 0:
@@ -2749,7 +2733,7 @@ class MadrigalDerivationMethods:
                     self.msis_ap[1] = outArr[1]
                     if numpy.isnan(outArr[4]):
                         self.msis_fbar = None
-                        outputArr[:26] = numpy.nan
+                        outputArr[:9] = numpy.nan
                         return
                     self.msis_fbar = outArr[4]*1.0e22
                     continue
@@ -2763,7 +2747,7 @@ class MadrigalDerivationMethods:
                     if i == 8:
                         if numpy.isnan(outArr[3]):
                             self.msis_fbar = None
-                            outputArr[:26] = numpy.nan
+                            outputArr[:9] = numpy.nan
                             return
                         self.msis_f107 = outArr[3]*1.0e22
                     continue
@@ -2774,7 +2758,7 @@ class MadrigalDerivationMethods:
             # use cache
             if self.msis_fbar is None:
                 # bad geophysical data
-                outputArr[:26] = numpy.nan
+                outputArr[:9] = numpy.nan
                 return
         
         
@@ -2800,54 +2784,46 @@ class MadrigalDerivationMethods:
                    gdlat, glon, gdalt, msis_ap, msis_fbar, msis_f107, outputArr):
         """madRunMsis uses pymsis to run msis instead of old Fortran code
         
-        "TNM", "TINFM", "MOL", "NTOTL", "NN2L",
+          "TNM", "MOL", "NN2L",
           "NO2L", "NOL", "NARL", "NHEL", "NHL",
-          "NN4SL", "NPRESL", "PSH",
-          "DTNM", "DTINFM", "DMOL", "DNTOTL", "DNN2L",
-          "DNO2L", "DNOL", "DNARL", "DNHEL", "DNHL",
-          "DNN4SL", "DNPRESL", "DPSH"
+          "NN4SL"
         """
         dates = [datetime.datetime(year, month, day, hour, minute, second)]
         result = pymsis.calculate(dates, [glon], [gdlat], [gdalt],
-                                  [msis_f107/1.0e22], [msis_fbar/1.0e22], [msis_ap])
+                                  [msis_f107], [msis_fbar], [msis_ap])
         outputArr[0] = result[0][10] # TNM
-        outputArr[1] = numpy.nan # TINFM
         try:
-            outputArr[2] = math.log10(result[0][0]) # MOL
+            outputArr[1] = math.log10(result[0][0]) # MOL
+        except ValueError:
+            outputArr[1] = numpy.nan
+        try:
+            outputArr[2] = math.log10(result[0][1]) # NN2L
         except ValueError:
             outputArr[2] = numpy.nan
-        outputArr[3] = numpy.nan # NTOTL
         try:
-            outputArr[4] = math.log10(result[0][1]) # NN2L
+            outputArr[3] = math.log10(result[0][2]) # N02L
+        except ValueError:
+            outputArr[3] = numpy.nan
+        try:
+            outputArr[4] = math.log10(result[0][3]) # NOL
         except ValueError:
             outputArr[4] = numpy.nan
         try:
-            outputArr[5] = math.log10(result[0][2]) # N02L
+            outputArr[5] = math.log10(result[0][6]) # NARL
         except ValueError:
             outputArr[5] = numpy.nan
         try:
-            outputArr[6] = math.log10(result[0][3]) # NOL
+            outputArr[6] = math.log10(result[0][4]) # NHEL
         except ValueError:
             outputArr[6] = numpy.nan
         try:
-            outputArr[7] = math.log10(result[0][6]) # NARL
+            outputArr[7] = math.log10(result[0][5]) # NHL
         except ValueError:
             outputArr[7] = numpy.nan
         try:
-            outputArr[8] = math.log10(result[0][4]) # NHEL
+            outputArr[8] = math.log10(result[0][7]) # NN4SL
         except ValueError:
             outputArr[8] = numpy.nan
-        try:
-            outputArr[9] = math.log10(result[0][5]) # NHL
-        except ValueError:
-            outputArr[9] = numpy.nan
-        try:
-            outputArr[10] = math.log10(result[0][7]) # NN4SL
-        except ValueError:
-            outputArr[10] = numpy.nan
-            
-        for i in range(11,26):
-            outputArr[i] = numpy.nan
             
         return
         

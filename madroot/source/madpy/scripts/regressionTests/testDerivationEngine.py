@@ -100,12 +100,11 @@ expectedDerivParms = ['IBYR', 'IBDT', 'IBHM', 'IBCS', 'IEYR', 'IEDT', 'IEHM', 'I
                       'ASPECT', 'KP', 'AP3', 'AP', 'F10.7', 'FBAR', 'DST', 'FOF2_MLH', 'POP', 'NEL', 'DNEL', 
                       'TE', 'DTE', 'NE_MODEL', 'NEL_MODEL', 'TE_MODEL', 'TI_MODEL', 'VO_MODEL', 'HMAX_MODEL', 
                       'NMAX_MODEL', 'NE_MODELDIFF', 'NEL_MODELDIFF', 'TE_MODELDIFF', 'TI_MODELDIFF', 
-                      'VO_MODELDIFF', 'SNP3', 'CHIP3', 'WCHSQ', 'TNM', 'TINFM', 'MOL', 'NTOTL', 'NN2L', 'NO2L', 
-                      'NOL', 'NARL', 'NHEL', 'NHL', 'NN4SL', 'NPRESL', 'PSH', 'DTNM', 'DTINFM', 'DMOL', 'DNTOTL', 
-                      'DNN2L', 'DNO2L', 'DNOL', 'DNARL', 'DNHEL', 'DNHL', 'DNN4SL', 'DNPRESL', 'DPSH', 'TN', 
-                      'DTN', 'NE_IRI', 'NEL_IRI', 'TN_IRI', 'TI_IRI', 'TE_IRI', 'PO+_IRI', 'PNO+_IRI', 'PO2+_IRI', 
-                      'PHE+_IRI', 'PH+_IRI', 'PN+_IRI', 'PDCON', 'PDCONL', 'HLCON', 'HLCONL', 'DPDCON', 'DPDCONL', 
-                      'DHLCON', 'DHLCONL', 'BXGSM', 'BYGSM', 'BZGSM', 'BIMF', 'BXGSE', 'BYGSE', 'BZGSE', 'SWDEN', 
+                      'VO_MODELDIFF', 'SNP3', 'CHIP3', 'WCHSQ', 'TNM', 'MOL','NN2L', 'NO2L', 
+                      'NOL', 'NARL', 'NHEL', 'NHL', 'NN4SL', 'TN',
+                      'NE_IRI', 'NEL_IRI', 'TN_IRI', 'TI_IRI', 'TE_IRI', 'PO+_IRI', 'PNO+_IRI', 'PO2+_IRI', 
+                      'PHE+_IRI', 'PH+_IRI', 'PN+_IRI', 'PDCON', 'PDCONL', 'HLCON', 'HLCONL',
+                      'BXGSM', 'BYGSM', 'BZGSM', 'BIMF', 'BXGSE', 'BYGSE', 'BZGSE', 'SWDEN', 
                       'SWSPD', 'SWQ',]
     
 madDB = madrigal.metadata.MadrigalDB()
@@ -119,8 +118,6 @@ s1 = set(expectedDerivParms)
 s2 = set(derivParms)
 if len(s1.symmetric_difference(s2)) > 0:
     raise ValueError('Derived parm list has changed due to items %s this regression test needs to be manually reset' % (str(s1.symmetric_difference(s2))))
-
-
 cmd = '%s/bin/isprint file=%s ' % (madDB.getMadroot(), testFile)
 filters = 'filter=recno,3,4 '
 cmd += filters

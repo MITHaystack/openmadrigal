@@ -19,7 +19,7 @@ if len(sys.argv) != 2:
     
 # constants
 user_fullname = 'Bill Rideout - automated test'
-user_email = 'brideout@haystack.mit.edu'
+user_email = 'brideout@mit.edu'
 user_affiliation = 'MIT Haystack'
 
 baseUrl = sys.argv[1]

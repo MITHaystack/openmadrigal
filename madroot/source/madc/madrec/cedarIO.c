@@ -1799,7 +1799,7 @@ int
 madptr(Int16 *time)
 {
     int n1jan50=2433283,year=0,month=0,day=0,hour=0,minute=0,
-        second=0,im1=0,iyr=0,imd=0,ihm=0,ics=0,jday1();
+        second=0,im1=0,iyr=0,imd=0,ihm=0,ics=0;
 
     iyr = time[0];
     imd = time[1];
@@ -1826,7 +1826,7 @@ int
 jday1(int day, int month, int year)
 {
 
-    int jday1no=0, y=0, c=0, ya=0, m=0, idmyk1();
+    int jday1no=0, y=0, c=0, ya=0, m=0;
 
     if (idmyk1(day, month, year) != 0) return(-1);
 

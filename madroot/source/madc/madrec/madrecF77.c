@@ -658,7 +658,6 @@ int mdisdr_(int *madfile)
 {
     /* meant to be called from Fortran - see Fortran comments above for documentation */
     Madrec *madrecp;
-    int cedarGetKrec();
 
     madrecp = madrecsp[*madfile];
     if (madrecp->recordp[1] == CATALOGBIN ||

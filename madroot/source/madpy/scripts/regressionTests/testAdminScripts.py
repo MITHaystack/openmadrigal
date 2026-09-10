@@ -28,7 +28,7 @@ print('The following is a regression test of the Madrigal admin scripts.\n')
 print('For this first pass, user is registered for this experiment, but not the instrument')
 
 # email address to send notifications to - change to your email if needed
-email = 'brideout@haystack.mit.edu'
+email = 'brideout@mit.edu'
 
 
 try:
@@ -72,7 +72,7 @@ try:
     cmd += ' --dirName=BillsTestExp20jan98 '
     cmd += ' --experimentsDirNum=2 '
     cmd += ' --PI="Bill Rideout" '
-    cmd += ' --PIEmail="brideout@haystack.mit.edu" '
+    cmd += ' --PIEmail="brideout@mit.edu" '
     cmd += ' --fileAnalyst="John Doe" '
     cmd += ' --fileAnalystEmail=jdoe@haystack.mit.edu '
     cmd += ' --createCachedText '
@@ -101,7 +101,7 @@ try:
     cmd += ' --dirName=BillsRTTestExp20jan98 '
     cmd += ' --experimentsDirNum=2 '
     cmd += ' --PI="Bill Rideout" '
-    cmd += ' --PIEmail="brideout@haystack.mit.edu" '
+    cmd += ' --PIEmail="brideout@mit.edu" '
     cmd += ' --fileAnalyst="John Doe,Tom Sawyer" '
     cmd += ' --fileAnalystEmail=jdoe@haystack.mit.edu,tsawyer@haystack.mit.edu '
     
@@ -128,7 +128,7 @@ try:
     cmd += ' --inst=31 '
     cmd += ' --security=1 '
     cmd += ' --PI="Bill Rideout" '
-    cmd += ' --PIEmail="brideout@haystack.mit.edu" '
+    cmd += ' --PIEmail="brideout@mit.edu" '
     print('Command to be tested: <%s>' % (cmd))
     result = os.system(cmd)
     if result == 0:
@@ -153,7 +153,7 @@ try:
     cmd += ' --category=2 '
     cmd += ' --kindat=3408 '
     cmd += ' --fileAnalyst="Bill Rideout" '
-    cmd += ' --fileAnalystEmail=brideout@haystack.mit.edu '
+    cmd += ' --fileAnalystEmail=brideout@mit.edu '
     cmd += ' --createCachedText '
     cmd += ' --createCachedNetCDF4 '
     print('Command to be tested: <%s>' % (cmd))
@@ -273,7 +273,7 @@ try:
     cmd += ' --dirName=BillsTestExp20jan98 '
     cmd += ' --experimentsDirNum=2 '
     cmd += ' --PI="Bill Rideout" '
-    cmd += ' --PIEmail="brideout@haystack.mit.edu" '
+    cmd += ' --PIEmail="brideout@mit.edu" '
     cmd += ' --fileAnalyst="John Doe" '
     cmd += ' --fileAnalystEmail=jdoe@haystack.mit.edu '
     cmd += ' --createCachedText '
@@ -302,7 +302,7 @@ try:
     cmd += ' --dirName=BillsRTTestExp20jan98 '
     cmd += ' --experimentsDirNum=2 '
     cmd += ' --PI="Bill Rideout" '
-    cmd += ' --PIEmail="brideout@haystack.mit.edu" '
+    cmd += ' --PIEmail="brideout@mit.edu" '
     cmd += ' --fileAnalyst="John Doe,Tom Sawyer" '
     cmd += ' --fileAnalystEmail=jdoe@haystack.mit.edu,tsawyer@haystack.mit.edu '
     
@@ -329,7 +329,7 @@ try:
     cmd += ' --inst=31 '
     cmd += ' --security=1 '
     cmd += ' --PI="Bill Rideout" '
-    cmd += ' --PIEmail="brideout@haystack.mit.edu" '
+    cmd += ' --PIEmail="brideout@mit.edu" '
     print('Command to be tested: <%s>' % (cmd))
     result = os.system(cmd)
     if result == 0:
@@ -354,7 +354,7 @@ try:
     cmd += ' --category=2 '
     cmd += ' --kindat=3408 '
     cmd += ' --fileAnalyst="Bill Rideout" '
-    cmd += ' --fileAnalystEmail=brideout@haystack.mit.edu '
+    cmd += ' --fileAnalystEmail=brideout@mit.edu '
     cmd += ' --createCachedText '
     cmd += ' --createCachedNetCDF4 '
     

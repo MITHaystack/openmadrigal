@@ -55,6 +55,8 @@ int setCheckSum(int, Int16 **);
 unsigned int decodeBits(unsigned char *, unsigned int, unsigned int);
 void encodeBits(unsigned char *, unsigned int, unsigned int, unsigned int);
 int jday(int, int, int);
+int jday1(int, int, int);
+int idmyk1(int, int, int);
 void dumpCedarRecord(Int16 **, char*);
 
 size_t fread16(void *ptr, size_t size, size_t nitems, FILE *stream);
