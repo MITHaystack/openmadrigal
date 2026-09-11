@@ -2554,7 +2554,7 @@ def get_madfile_service(request):
     if not v1:
         if not v2:
             # no experiment directory found, invalid file
-            return(HttpResponse('<p>fileName {} not allowed<p>').format(fileName))
+            return(HttpResponse('<p>fileName {} not allowed<p>'.format(fileName)))
         
     # make sure temporary file and directory are always deleted, even if an exception
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -2588,8 +2588,12 @@ def get_madfile_service(request):
             
         else:
             tmpFile = fileName
-            
-        f = open(tmpFile, 'rb')
+
+        try:
+            f = open(tmpFile, 'rb')
+        except FileNotFoundError:
+            # invalid file
+            return(HttpResponse('<p>fileName {} not found<p>'.format(fileName)))
         filename = os.path.basename(tmpFile)
         chunk_size = 8192
         file_type = mimetypes.guess_type(tmpFile)[0]
