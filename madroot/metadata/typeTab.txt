@@ -89,6 +89,7 @@
 30_3440,Autocorrelation function
 3500,TEC binned 1 degree by 1 degree by 5 min
 8000_3500,TEC binned 1 degree by 1 degree by 5 min
+8000_3507,Calculated ROTI in units of TECu/sec
 3505,Line of sight TEC data
 3506,List of sites used in daily TEC data
 3510,PUSCAT electron density profile
