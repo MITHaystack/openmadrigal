@@ -725,7 +725,7 @@ class MadrigalUserData:
         Inputs: name - the string to be validated.
         
         Returns: 1 if all characters are allowed, 0 otherwise.  Valid if the following characters are not found in the
-        string after leading and trailing whitespace is removed: [' ', '/', '<', '>', '\']
+        string after leading and trailing whitespace is removed: ['/', '<', '>', '\']
 
         Affects: None
 
@@ -734,7 +734,7 @@ class MadrigalUserData:
 
         name = name.strip()
 
-        invalidChars = [' ', '/', '<', '>', '\\']
+        invalidChars = ['/', '<', '>', '\\']
 
         # check if any invalid characters found in name
         for char in invalidChars:
