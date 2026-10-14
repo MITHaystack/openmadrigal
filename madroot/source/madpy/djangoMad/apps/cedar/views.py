@@ -169,7 +169,7 @@ def get_log_admin(request):
     bg_color = madDB.getBackgroundColor()
     
     if request.method == 'POST':
-        form =forms.AdminLogForm(request.POST)
+        form = forms.AdminLogForm(request.POST, request=request)
         if form.is_valid():
             
             cleaned_data = form.cleaned_data
@@ -189,7 +189,7 @@ def get_log_admin(request):
             return(response)
 
     else:
-        form =forms.AdminLogForm()
+        form = forms.AdminLogForm(request=request)
     
     responseDict = {'bg_color': bg_color}
     responseDict['form'] = form

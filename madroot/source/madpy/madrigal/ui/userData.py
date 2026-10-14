@@ -49,7 +49,7 @@ class MadrigalUserData:
     _MaxSleep     = 10
     # 2 char string to use in crypt
     # Changing this will cause all stored passwords to fail
-    _cryptStr     = 'md'
+    _cryptStr     = crypt.mksalt(crypt.METHOD_SHA256)
     
 
     def __init__(self, madDB = None):
@@ -479,7 +479,7 @@ class MadrigalUserData:
                 # username found, now encrypt password
                 pwdEncrypt = crypt.crypt(password, self._cryptStr)
                 # verify password
-                if pwdEncrypt == name[1]:
+                if crypt.Crypt.is_valid(password, name[1]):
                     return 1
                 else:
                     # wrong password
@@ -609,50 +609,38 @@ class MadrigalUserData:
         # lock out any method that writes to file
         self._getLock(filename)
 
-        # user data loaded by userExists
+        try:
+            userDoc = xml.dom.minidom.parse(filename)
 
-        #make username lower, without white space
-        username = username.lower().strip()
+            for user in userDoc.getElementsByTagName("user"):
+                names = user.getElementsByTagName("name")
+                if not names or not names[0].firstChild:
+                    continue
 
-        if not self.userExists(username):
-            return 'User ' + username + ' does not exist.'
+                stored_username = names[0].firstChild.data.strip().lower()
+                if stored_username != username:
+                    continue
 
-        #encrypt password
-        pwdEncrypt = crypt.crypt(password, self._cryptStr)
+                passwords = user.getElementsByTagName("password")
+                newPasswordElem = userDoc.createElement("password")
+                newPasswordElem.appendChild(
+                    userDoc.createTextNode(crypt.crypt(password, self._cryptStr))
+                )
 
-        # open dom
-        userDoc = xml.dom.minidom.parse(filename)
+                if passwords:
+                    user.replaceChild(newPasswordElem, passwords[0])
+                else:
+                    user.appendChild(newPasswordElem)
 
-        #now create new password element to replace old
-        newPasswordElem = userDoc.createElementNS(None, 'password')
+                with open(filename, "w") as outfp:
+                    userDoc.writexml(outfp)
+                    outfp.write("\n")
 
-        #Create a text node
-        newPasswordText = userDoc.createTextNode(pwdEncrypt)
+                return 1
 
-        # append text node to newPasswordElem
-        newPasswordElem.appendChild(newPasswordText)
-
-        # get all user elements
-        userElemList = userDoc.getElementsByTagName("user")
-
-        # loop through each user element
-        for user in userElemList:
-            thisUserNameEl = user.getElementsByTagName('name')[0]
-            if username == self._getText(thisUserNameEl.childNodes):
-                # modify password
-                thisPasswordEl = user.getElementsByTagName('password')[0]
-                user.replaceChild(newPasswordElem, thisPasswordEl)
-
-        #output result
-        outfp = open(self._metaDir + '/' + self._userXMLDir + '/' + self._userXMLFile, 'w')
-        userDoc.writexml(outfp)
-        outfp.write("\n")
-        outfp.close()
-
-        # done with user file - allow access to other writing calls
-        self._dropLock(filename)
-                     
-        return 1
+            return "User " + username + " does not exist."
+        finally:
+            self._dropLock(filename)
         
         
         

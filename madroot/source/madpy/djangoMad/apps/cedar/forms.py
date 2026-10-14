@@ -22,7 +22,12 @@ class AdminLogForm(django.forms.Form):
     """AdminLogForm is a Form class for the get log admin interface
     """
     def __init__(self, *args, **kwargs):
+        # Extract the request object passed from the view
+        request = kwargs.pop('request', None)
         super(AdminLogForm, self).__init__(*args, **kwargs)
+        
+        # The admin identity is supplied by the user_fullname cookie.
+        self.user_fullname = request.COOKIES.get('user_fullname') if request else None
         
         selectedSite = None
         kinstChoices = [('0', 'Select a site first'),]
@@ -124,7 +129,9 @@ class AdminLogForm(django.forms.Form):
                 break
         if siteName is None:
             raise django.forms.ValidationError('Illegal site choosen')
-        if not self.madUserObj.verifyUser(siteName, self.cleaned_data['password']):
+        if not self.user_fullname:
+            raise django.forms.ValidationError('Missing user_fullname cookie')
+        if not self.madUserObj.verifyUser(self.user_fullname, self.cleaned_data['password']):
             raise django.forms.ValidationError('Incorrect password')
         
         
