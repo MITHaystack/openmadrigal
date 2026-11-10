@@ -3,6 +3,8 @@
 21,ALO Airglow Imager
 22,ASU Poker Flat Imager Meridional Keogram
 23,ASU Poker Flat Imager Zonal Keogram
+24,Raw image data - BU all sky imager network
+25,Unwarped image data - BU all sky imager network
 1002,~1 min or ~20 s 3-freq night photon counts
 10_1040,VERTICAL VELOCITY COMPONENT ONLY
 1050,Basic Derived Parameters

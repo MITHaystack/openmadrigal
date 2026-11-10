@@ -1630,6 +1630,11 @@
 4335,Antenna type,N/A,ANT_TYPE,%20s,21,14,0,0
 4336,OH emission intensity (arbitrary units),N/A,OH_EM_INTENSITY,%5.11f,17,15,0,0
 4337,Distance from Zenith,km,ZEN_DIST,%4.2f,7,1,0,0
+4338,Pixel axis 1,N/A,PIX_AX1,%i,7,15,0,0
+4339,Pixel axis 2,N/A,PIX_AX2,%i,7,15,0,0
+4340,Pixel intensity,N/A,PIX,%5.5f,11,15,0,0
+4341,Exposure time,sec,EXP_TIME,%3.2f,6,15,0,0
+4342,Field of view,deg,FOV,%3.4f,8,15,0,0
 0,Length of this record,N/A,LTOT,%9.0f,11,-2,0,0
 0,Kind of this record,N/A,KREC,%9.0f,11,-2,0,0
 3339,Instrument Code,N/A,KINST,%i,11,-1,0,0
